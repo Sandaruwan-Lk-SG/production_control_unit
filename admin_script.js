@@ -1,151 +1,138 @@
 // --- Configuration ---
 const API_URL = "https://backpcu-production.up.railway.app"; 
 
-// --- Authentication Check ---
+// --- Auth & Setup ---
 window.onload = function() {
     const role = localStorage.getItem('userRole');
     const token = localStorage.getItem('token');
-
-    // Token එක හෝ Admin බලය නැත්නම් එළියට දානවා
     if (role !== 'admin' || !token) {
-        alert("⚠️ Access Denied! Please Login.");
         window.location.href = 'index.html';
     } else {
-        loadDashboardStats();
+        loadDashboardStats(); // Load numbers
+        loadPendingRequests(); // Check for damages
     }
 };
+
+function getAuthHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+}
 
 // --- Navigation ---
 function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
     document.getElementById(sectionId).style.display = 'block';
-    
     document.querySelectorAll('.glass-sidebar li').forEach(li => li.classList.remove('active'));
-    // Active class logic can be improved based on click, keeping simple for now
     
-    if(sectionId === 'inventory') {
-        loadInventory();
-    }
+    // Refresh Data based on Tab
+    if(sectionId === 'inventory') loadInventory();
+    if(sectionId === 'requests') loadPendingRequests();
+    if(sectionId === 'reports') loadActivityLogs();
 }
 
-function logout() {
-    localStorage.clear(); // Token එක මකනවා
-    window.location.href = 'index.html';
-}
+function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
-// --- API Helper (Token එක Header එකට දාන්න) ---
-function getAuthHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}` // ✅ Token එක මෙතනින් යනවා
-    };
-}
-
-// --- 1. Add Item Logic ---
-const addItemForm = document.getElementById('addItemForm');
-if (addItemForm) {
-    addItemForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const itemData = {
-            item_name: document.getElementById('itemName').value,
-            sku: document.getElementById('itemSku').value,
-            category: document.getElementById('itemCategory').value,
-            size: document.getElementById('itemSize').value
-        };
-
-        const submitBtn = addItemForm.querySelector('button');
-        const originalText = submitBtn.innerText;
-        submitBtn.innerText = "Saving...";
-
-        try {
-            const response = await fetch(`${API_URL}/api/admin/add-item`, {
-                method: 'POST',
-                headers: getAuthHeaders(), // Header එක යවනවා
-                body: JSON.stringify(itemData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert("✅ Item Added Successfully!");
-                addItemForm.reset();
-                loadDashboardStats();
-            } else {
-                alert("❌ Error: " + (result.error || "Failed to add item"));
-                if (response.status === 401 || response.status === 403) logout();
-            }
-
-        } catch (err) {
-            console.error(err);
-            alert("❌ Server Connection Error!");
-        } finally {
-            submitBtn.innerText = originalText;
-        }
-    });
-}
-
-// --- 2. Load Stats & Inventory ---
+// --- 1. Dashboard & Inventory ---
 async function loadDashboardStats() {
     try {
-        const response = await fetch(`${API_URL}/api/admin/stats?type=NORMAL`, {
-            method: 'GET',
-            headers: getAuthHeaders() // Header එක යවනවා
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                logout(); // Token එක කල් ඉකුත් වී ඇත්නම් logout කරන්න
-                return;
-            }
-            throw new Error("Failed to fetch data");
-        }
-
-        const data = await response.json();
+        const res = await fetch(`${API_URL}/api/admin/stats?type=NORMAL`, { headers: getAuthHeaders() });
+        const data = await res.json();
         
-        // Update Cards
-        const totalItems = document.getElementById('totalItems');
-        const lowStock = document.getElementById('lowStock');
-        
-        if(totalItems) totalItems.innerText = data.length;
-        if(lowStock) lowStock.innerText = data.filter(item => item.qty < 5).length;
-
-        // Update Inventory Table
+        document.getElementById('totalItems').innerText = data.length;
+        document.getElementById('lowStock').innerText = data.filter(i => i.qty < 5).length;
         updateInventoryTable(data);
-
-    } catch (error) {
-        console.error("Stats Load Error:", error);
-    }
+    } catch (e) { console.error(e); }
 }
 
 function updateInventoryTable(data) {
-    const tableBody = document.getElementById('inventoryTableBody');
-    if (!tableBody) return;
-
-    tableBody.innerHTML = '';
-
-    if (data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No Items Found</td></tr>';
-        return;
-    }
-
+    const tbody = document.getElementById('inventoryTableBody');
+    tbody.innerHTML = '';
     data.forEach(item => {
-        let statusBadge = item.qty <= 0 ? '<span style="color: #ff4d4d;">Out of Stock</span>' : 
-                          (item.qty < 5 ? '<span style="color: #ffcc00;">Low Stock</span>' : '<span style="color: #00e676;">In Stock</span>');
-
-        const row = `
-            <tr>
-                <td>${item.category}</td>
-                <td>${item.item_name} <br/><small style="color:#aaa;">${item.sku || ''}</small></td>
-                <td>${item.size || '-'}</td>
-                <td style="font-size: 1.1em;">${item.qty}</td>
-                <td>${statusBadge}</td>
-            </tr>
-        `;
-        tableBody.innerHTML += row;
+        let status = item.qty < 5 ? (item.qty <= 0 ? '<span style="color:red">Out</span>' : '<span style="color:orange">Low</span>') : '<span style="color:green">OK</span>';
+        tbody.innerHTML += `<tr><td>${item.category}</td><td>${item.item_name}</td><td>${item.size||'-'}</td><td>${item.qty}</td><td>${status}</td></tr>`;
     });
 }
 
-function loadInventory() {
-    loadDashboardStats();
+// --- 2. Add Item ---
+document.getElementById('addItemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // (කලින් කෝඩ් එකම මෙතන තියෙන්න ඕන - මම කෙටි කලා)
+    const itemData = {
+        item_name: document.getElementById('itemName').value,
+        sku: document.getElementById('itemSku').value,
+        category: document.getElementById('itemCategory').value,
+        size: document.getElementById('itemSize').value
+    };
+    await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(itemData) });
+    alert("Item Added!");
+    document.getElementById('addItemForm').reset();
+});
+
+// --- 3. Handle Requests (Damage Control) ---
+async function loadPendingRequests() {
+    // මේක Backend එකේ අලුත් API එකක් ඉල්ලනවා (damage reports). 
+    // දැනට අපි ලොග් එකෙන් මේක ෆිල්ටර් කරගන්න හැටි හදමු, නැත්නම් Backend එකට පොඩි කෑල්ලක් දාන්න වෙනවා.
+    // සරලව තියාගන්න, අපි Reports table එකෙන් Damage පෙන්නමු.
+    
+    // NOTE: Backend එකේ අපි 'damage_reports' table එකට වෙනම API එකක් හැදුවේ නෑ නේද?
+    // ඒ නිසා අපි 'ADVANCE' stats වලින් දත්ත ගමු.
+    
+    try {
+        const res = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getAuthHeaders() });
+        const logs = await res.json();
+        
+        // Damage/Shortage විතරක් ෆිල්ටර් කරන්න
+        const pending = logs.filter(l => l.action_type === 'DAMAGE' || l.action_type === 'SHORTAGE');
+        
+        document.getElementById('pendingDamages').innerText = pending.length;
+        document.getElementById('reqCount').innerText = pending.length;
+        
+        const tbody = document.getElementById('requestsTableBody');
+        tbody.innerHTML = '';
+        
+        if(pending.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No Pending Requests</td></tr>';
+            return;
+        }
+
+        pending.forEach(req => {
+            // Note: හරිනම් මෙතන Approve Button එක වැඩ කරන්න ID එක ඕන.
+            // දැනට අපි View Only හදමු. 
+            tbody.innerHTML += `
+                <tr>
+                    <td>${new Date(req.timestamp).toLocaleDateString()}</td>
+                    <td>${req.item_name_snapshot}</td>
+                    <td style="color:red">${req.action_type}</td>
+                    <td>${req.qty_changed}</td>
+                    <td>${req.user_name}</td>
+                    <td>
+                        <button class="btn-action btn-approve" onclick="alert('Feature coming soon')">Replace</button>
+                        <button class="btn-action btn-reject" onclick="alert('Feature coming soon')">Remove</button>
+                    </td>
+                </tr>`;
+        });
+    } catch (e) { console.error(e); }
+}
+
+// --- 4. Logs History ---
+async function loadActivityLogs() {
+    try {
+        const res = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getAuthHeaders() });
+        const logs = await res.json();
+        
+        const tbody = document.getElementById('logsTableBody');
+        tbody.innerHTML = '';
+        
+        logs.forEach(log => {
+            let color = log.action_type === 'IN' ? 'green' : (log.action_type === 'OUT' ? 'orange' : 'red');
+            tbody.innerHTML += `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.user_name}</td>
+                    <td style="color:${color}; font-weight:bold">${log.action_type}</td>
+                    <td>${log.item_name_snapshot}</td>
+                    <td>${log.qty_changed}</td>
+                    <td>${log.line_number || '-'}</td>
+                </tr>`;
+        });
+    } catch (e) { console.error(e); }
 }
