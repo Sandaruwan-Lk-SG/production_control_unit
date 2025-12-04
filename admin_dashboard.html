@@ -7,34 +7,23 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Slow Moving Alert Box */
+        /* Stagnant Alert Box */
         .stagnant-container {
-            background: rgba(255, 77, 77, 0.15);
-            border: 1px solid #ff4d4d;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: none; /* JS වලින් පෙන්වනවා */
+            background: rgba(255, 77, 77, 0.15); border: 1px solid #ff4d4d;
+            border-radius: 10px; padding: 20px; margin-bottom: 30px; display: none;
         }
-        .stagnant-title { color: #ff4d4d; font-size: 18px; margin-bottom: 10px; font-weight: bold; }
-        .stagnant-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .stagnant-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .stagnant-badge { 
             background: #ff4d4d; color: white; padding: 5px 10px; 
             border-radius: 5px; font-size: 13px; display: flex; align-items: center; 
         }
-        .stagnant-badge i { margin-right: 5px; }
-
+        
         /* Category Cards */
         .cat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px; border-radius: 10px; text-align: center; transition: 0.3s;
         }
-        .cat-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-5px); }
-        .cat-title { color: #00f2ff; font-size: 16px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .cat-title { color: #00f2ff; font-size: 16px; margin-bottom: 5px; text-transform: uppercase; }
         .cat-count { font-size: 32px; font-weight: bold; color: white; }
     </style>
 </head>
@@ -48,8 +37,8 @@
             <ul>
                 <li onclick="switchTab('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
                 <li onclick="switchTab('add_item')"><i class="fas fa-plus-circle"></i> Add Item</li>
-                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> Operations</li>
-                <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> Inventory List</li>
+                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> Stock Operations</li>
+                <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> Inventory Summary</li>
                 <li onclick="switchTab('reports')"><i class="fas fa-file-contract"></i> Reports</li>
                 <li onclick="logout()" style="margin-top: auto; color: #ff6b6b;"><i class="fas fa-power-off"></i> Logout</li>
             </ul>
@@ -61,15 +50,12 @@
                 <h2>Stock Overview</h2>
 
                 <div id="stagnantBox" class="stagnant-container">
-                    <div class="stagnant-title"><i class="fas fa-exclamation-circle"></i> Attention: Items Stuck for > 2 Days</div>
-                    <div id="stagnantItems" class="stagnant-list">
-                        </div>
+                    <h3 style="color:#ff4d4d; font-size:18px;"><i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)</h3>
+                    <div id="stagnantItems" class="stagnant-list"></div>
                 </div>
 
                 <h3 style="margin-bottom: 15px; color:#aaa;">Quantity by Category</h3>
-                <div id="categoryGrid" class="cards-grid">
-                    <p>Loading...</p>
-                </div>
+                <div id="categoryGrid" class="cards-grid"><p>Loading...</p></div>
 
                 <h3 style="margin-top:30px; color:#ff6b6b">Pending Damage Reports</h3>
                 <div class="table-wrapper">
@@ -102,23 +88,39 @@
                 <h2>Stock Operations (In/Out)</h2>
                 <label>Select Item to Update:</label>
                 <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
+                    <input type="text" id="opSearch" placeholder="Type item name to select..." autocomplete="off">
                     <div id="opDropdown" class="dropdown-results"></div>
                 </div>
                 <input type="hidden" id="selectedItemId">
+
                 <div style="display:flex; gap:10px; margin-top:20px;">
-                    <select id="opType" class="glass-input" style="width:150px;"><option value="IN">STOCK IN</option><option value="OUT">STOCK OUT</option></select>
+                    <select id="opType" class="glass-input" style="width:150px;">
+                        <option value="IN">STOCK IN</option>
+                        <option value="OUT">STOCK OUT</option>
+                    </select>
                     <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
                 </div>
                 <button onclick="performStockOp()" style="margin-top:10px; background:#00f2ff; color:black;">Update Stock</button>
             </section>
 
             <section id="tab-inventory" style="display: none;">
-                <h2>Full Inventory</h2>
+                <h2>Inventory Summary (Total Qty)</h2>
+                
+                <div class="search-wrapper" style="margin-bottom: 20px;">
+                    <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name to Filter..." autocomplete="off">
+                </div>
+
                 <div class="table-wrapper">
                     <table class="glass-table">
-                        <thead><tr><th>Category</th><th>Item</th><th>Size</th><th>Qty</th><th>Status</th><th>Edit</th></tr></thead>
-                        <tbody id="inventoryTable"></tbody>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Item Name</th>
+                                <th>Total Qty</th> <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTable">
+                            </tbody>
                     </table>
                 </div>
             </section>
