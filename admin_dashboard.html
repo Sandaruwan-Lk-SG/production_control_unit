@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCU Admin | Dashboard</title>
+    <title>PCU Admin | Full Control</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -25,60 +25,37 @@
                 <li onclick="showSection('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
                 <li onclick="showSection('add-item')"><i class="fas fa-plus-circle"></i> Add Item</li>
                 <li onclick="showSection('inventory')"><i class="fas fa-boxes"></i> Inventory</li>
+                <li onclick="showSection('requests')"><i class="fas fa-bell"></i> Requests <span id="reqCount" class="badge">0</span></li>
+                <li onclick="showSection('reports')"><i class="fas fa-history"></i> Logs & Reports</li>
                 <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
             </ul>
         </nav>
 
         <main class="glass-content">
             
-            <section id="overview" class="section active-section">
+            <section id="overview" class="section">
                 <h2>Dashboard Overview</h2>
                 <div class="cards-grid">
-                    <div class="glass-card">
-                        <i class="fas fa-box-open"></i>
-                        <h3 id="totalItems">0</h3>
-                        <p>Total Items</p>
-                    </div>
-                    <div class="glass-card warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3 id="lowStock">0</h3>
-                        <p>Low Stock</p>
-                    </div>
-                    <div class="glass-card danger">
-                        <i class="fas fa-heart-broken"></i>
-                        <h3 id="damageCount">0</h3>
-                        <p>Damages</p>
-                    </div>
+                    <div class="glass-card"><i class="fas fa-box"></i><h3 id="totalItems">0</h3><p>Total Items</p></div>
+                    <div class="glass-card warning"><i class="fas fa-exclamation-triangle"></i><h3 id="lowStock">0</h3><p>Low Stock</p></div>
+                    <div class="glass-card danger"><i class="fas fa-bug"></i><h3 id="pendingDamages">0</h3><p>Pending Issues</p></div>
                 </div>
             </section>
 
             <section id="add-item" class="section" style="display: none;">
                 <h2>Add New Item</h2>
                 <form id="addItemForm" class="internal-form">
-                    <div class="form-group">
-                        <label>Item Name</label>
-                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
-                    </div>
-                    <div class="form-group">
-                        <label>SKU (Optional)</label>
-                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
-                    </div>
+                    <div class="form-group"><label>Item Name</label><input type="text" id="itemName" required></div>
+                    <div class="form-group"><label>SKU</label><input type="text" id="itemSku"></div>
                     <div class="form-group">
                         <label>Category</label>
                         <select id="itemCategory" class="glass-input">
-                            <option value="Packing">Packing</option>
-                            <option value="Insole">Insole</option>
-                            <option value="Sole">Sole</option>
-                            <option value="Upper">Upper</option>
-                            <option value="Cut Insole">Cut Insole</option>
-                            <option value="Cut Upper">Cut Upper</option>
-                            <option value="Line Order">Line Order</option>
+                            <option>Packing</option><option>Insole</option><option>Sole</option>
+                            <option>Upper</option><option>Cut Insole</option><option>Cut Upper</option>
+                            <option>Line Order</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Size</label>
-                        <input type="text" id="itemSize" placeholder="Ex: 10">
-                    </div>
+                    <div class="form-group"><label>Size</label><input type="text" id="itemSize"></div>
                     <button type="submit">Add to Inventory</button>
                 </form>
             </section>
@@ -87,17 +64,28 @@
                 <h2>Current Stock</h2>
                 <div class="table-wrapper">
                     <table class="glass-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Item Name</th>
-                                <th>Size</th>
-                                <th>Qty</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTableBody">
-                            </tbody>
+                        <thead><tr><th>Cat</th><th>Item</th><th>Size</th><th>Qty</th><th>Status</th></tr></thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="requests" class="section" style="display: none;">
+                <h2>Pending Damage/Shortage Reports</h2>
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Reported By</th><th>Action</th></tr></thead>
+                        <tbody id="requestsTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="reports" class="section" style="display: none;">
+                <h2>System Activity Log (History)</h2>
+                <div class="table-wrapper">
+                    <table class="glass-table" style="font-size: 0.9em;">
+                        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Item</th><th>Change</th><th>Line No</th></tr></thead>
+                        <tbody id="logsTableBody"></tbody>
                     </table>
                 </div>
             </section>
@@ -106,5 +94,11 @@
     </div>
 
     <script src="admin_script.js"></script>
+    <style>
+        .badge { background: red; padding: 2px 6px; border-radius: 50%; font-size: 12px; margin-left: 5px; }
+        .btn-action { padding: 5px 10px; margin: 2px; border-radius: 5px; cursor: pointer; color: white; font-size: 12px; }
+        .btn-approve { background: #00e676; }
+        .btn-reject { background: #ff4d4d; }
+    </style>
 </body>
 </html>
