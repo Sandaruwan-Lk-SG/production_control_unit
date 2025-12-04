@@ -2,231 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- paste just above <div class="dashboard-container"> -->
-<i class="fas fa-bars"></i>
-</button>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PCU Admin | Master Control</title>
+    
     <link rel="stylesheet" href="style.css">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Stagnant Alert Box */
-        <!-- Paste this into your <head> (replace or append to existing <style>) -->
-<style>
-:root{
-  --bg-1: #0f1724;
-  --bg-2: linear-gradient(135deg, rgba(2,6,23,1) 0%, rgba(8,16,34,1) 100%);
-  --glass: rgba(255,255,255,0.04);
-  --glass-strong: rgba(255,255,255,0.07);
-  --accent: #00f2ff;
-  --danger: #ff4d4d;
-  --muted: #aab3c7;
-  --glass-border: rgba(255,255,255,0.06);
-  --radius: 12px;
-  --card-pad: 18px;
-  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Page background */
-html,body{
-  height:100%;
-  margin:0;
-  background: var(--bg-2);
-  color: #e6eef6;
-}
-
-/* Decorative background shapes (if you keep the .background markup) */
-.background{
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  background: radial-gradient(800px 400px at 10% 10%, rgba(0,242,255,0.06), transparent 10%),
-              radial-gradient(600px 300px at 90% 90%, rgba(255,77,77,0.03), transparent 10%);
-}
-
-/* Dashboard layout */
-.dashboard-container{
-  display:flex;
-  min-height:100vh;
-  gap:28px;
-  padding:28px;
-  box-sizing:border-box;
-  align-items:flex-start;
-  z-index:1;
-}
-
-/* Sidebar (glass) */
-.glass-sidebar{
-  width:260px;
-  min-width:200px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border:1px solid var(--glass-border);
-  border-radius:16px;
-  padding:18px;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-  backdrop-filter: blur(8px) saturate(1.1);
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  position:sticky;
-  top:28px;
-  height:calc(100vh - 56px);
-  overflow:auto;
-}
-
-/* Profile on sidebar */
-.profile{
-  display:flex; align-items:center; gap:12px;
-  padding-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.03);
-}
-.profile h3{ margin:0; font-size:16px; color:#dffcff; letter-spacing:0.4px; }
-
-/* Sidebar menu */
-.glass-sidebar ul{ list-style:none; padding:0; margin:12px 0 0 0; display:flex; flex-direction:column; gap:8px; }
-.glass-sidebar ul li{
-  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
-  cursor:pointer; color:var(--muted); transition: all 160ms ease;
-  font-size:14px;
-}
-.glass-sidebar ul li i{ width:22px; text-align:center; color:var(--accent); }
-.glass-sidebar ul li:hover{ transform:translateX(6px); color: #fff; background: rgba(255,255,255,0.02); }
-.glass-sidebar ul li.active{ background: linear-gradient(90deg, rgba(0,242,255,0.06), rgba(0,242,255,0.02)); color:#fff; box-shadow: inset 0 0 0 1px rgba(0,242,255,0.02); }
-
-/* Content area */
-.glass-content{
-  flex:1;
-  padding:28px;
-  background: transparent;
-  border-radius: 14px;
-  box-sizing:border-box;
-  min-width:0;
-}
-
-/* Section headings */
-.glass-content h2{ margin:0 0 14px 0; font-size:20px; color:#e9faff; }
-.glass-content h3{ margin:14px 0; font-weight:600; color:var(--muted); }
-
-/* Cards grid */
-.cards-grid{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:14px;
-  margin-top:10px;
-}
-@media (max-width:1100px){ .cards-grid{ grid-template-columns: repeat(3, 1fr); } }
-@media (max-width:720px){ .cards-grid{ grid-template-columns: repeat(2, 1fr); } }
-@media (max-width:420px){ .cards-grid{ grid-template-columns: repeat(1, 1fr); } }
-
-.cat-card{
-  padding:var(--card-pad);
-  border-radius:12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border:1px solid rgba(255,255,255,0.03);
-  box-shadow: 0 6px 18px rgba(2,6,23,0.45);
-  display:flex; flex-direction:column; align-items:center; gap:8px;
-}
-.cat-title{ color:var(--accent); font-weight:700; letter-spacing:0.8px; font-size:12px; text-transform:uppercase; }
-.cat-count{ font-size:28px; font-weight:800; color:#ffffff; }
-
-/* Stagnant box (slow movers) */
-.stagnant-container{
-  display:none; /* your JS toggles this; fine to keep hidden by default */
-  padding:14px;
-  border-radius:12px;
-  background: linear-gradient(90deg, rgba(255,77,77,0.06), rgba(255,77,77,0.03));
-  border:1px solid rgba(255,77,77,0.18);
-}
-.stagnant-list{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-.stagnant-badge{ background:var(--danger); color:white; padding:6px 10px; border-radius:999px; font-size:13px; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 4px 14px rgba(255,77,77,0.18); }
-
-/* Table styling */
-.table-wrapper{ width:100%; overflow:auto; margin-top:8px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); }
-.glass-table{ width:100%; border-collapse:collapse; min-width:700px; }
-.glass-table thead tr{ background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
-.glass-table th, .glass-table td{
-  text-align:left; padding:12px 14px; font-size:14px; color:#d8e8f3; border-bottom:1px solid rgba(255,255,255,0.02);
-}
-.glass-table tbody tr:hover{ background: rgba(255,255,255,0.015); transform: translateZ(0); }
-.glass-table th{ font-size:13px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.6px; }
-
-/* Buttons and inputs */
-button{
-  background: var(--accent);
-  border: none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700;
-  box-shadow: 0 8px 24px rgba(0,242,255,0.07); transition: transform 130ms ease, box-shadow 130ms ease;
-}
-button:hover{ transform:translateY(-3px); box-shadow: 0 16px 40px rgba(0,242,255,0.08); }
-.internal-form{ display:flex; flex-direction:column; gap:12px; max-width:520px; }
-.form-group{ display:flex; flex-direction:column; gap:6px; }
-.form-group label{ font-size:13px; color:var(--muted); }
-input[type="text"], input[type="number"], input[type="date"], select, .glass-input{
-  background: rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.03);
-  padding:10px 12px; border-radius:10px; color:#eaf6ff; outline:none; font-size:14px;
-}
-input::placeholder{ color: rgba(234,246,255,0.28); }
-
-/* Search wrappers and dropdown results */
-.search-wrapper{ position:relative; width:100%; max-width:560px; }
-.dropdown-results{
-  position:absolute; left:0; right:0; top:calc(100% + 8px);
-  background: rgba(6,10,20,0.98); border-radius:10px; border:1px solid rgba(255,255,255,0.03);
-  box-shadow: 0 12px 36px rgba(2,6,23,0.7); z-index:40; max-height:240px; overflow:auto; display:none;
-}
-.dropdown-results .item{ padding:10px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.02); color:#dbefff; }
-.dropdown-results .item:hover{ background: rgba(255,255,255,0.02); }
-
-/* Small utility */
-.table-actions{ display:flex; gap:8px; align-items:center; }
-.status-pill{ padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; }
-
-/* Reports area */
-.date-filters{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
-.tab-btn{ background: transparent; border:1px solid rgba(255,255,255,0.03); padding:8px 12px; border-radius:10px; cursor:pointer; color:var(--muted); }
-.tab-btn.active{ border-color: rgba(0,242,255,0.12); background: linear-gradient(90deg, rgba(0,242,255,0.03), rgba(0,242,255,0.01)); color:#e8fbff; }
-
-/* Responsive: collapse sidebar into a top horizontal nav on small screens */
-@media (max-width:880px){
-  .dashboard-container{ flex-direction:column; padding:18px; gap:18px; }
-  .glass-sidebar{
-    width:100%; height:auto; position:relative; top:0; display:flex; flex-direction:row; align-items:center;
-    padding:8px 12px; gap:12px; overflow:auto; border-radius:12px;
-  }
-  .glass-sidebar .profile{ flex:0 0 auto; padding:0; border-bottom:none; align-items:center; gap:8px; }
-  .glass-sidebar ul{ flex-direction:row; gap:6px; margin:0; overflow:auto; }
-  .glass-sidebar ul li{ padding:8px 10px; white-space:nowrap; font-size:13px; }
-  .glass-content{ padding:14px; }
-  .glass-table{ min-width:600px; }
-}
-
-/* Very small screens */
-@media (max-width:420px){
-  .glass-sidebar ul li{ font-size:12px; padding:8px; }
-  .cat-count{ font-size:22px; }
-  .glass-table thead{ display:none; }
-  .glass-table tbody tr{ display:block; margin-bottom:12px; border-radius:10px; padding:10px; background: rgba(255,255,255,0.01); }
-  .glass-table td{ display:flex; justify-content:space-between; padding:8px 10px; border-bottom:none; }
-  .glass-table td::before{ content: attr(data-label); color:var(--muted); margin-right:8px; font-weight:600; }
-}
-
-/* Tiny touches */
-a, button, input, select{ -webkit-tap-highlight-color: transparent; }
-</style></style>
 </head>
 <body>
 
-    <div class="background"><div class="shape"></div><div class="shape"></div></div>
+    <div class="background">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
 
     <div class="dashboard-container">
+        
         <nav class="glass-sidebar">
-            <div class="profile"><i class="fas fa-user-secret fa-3x"></i><h3>Admin Panel</h3></div>
+            <div class="profile">
+                <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
+                <h3>Admin Panel</h3>
+            </div>
             <ul>
-                <li onclick="switchTab('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
-                <li onclick="switchTab('add_item')"><i class="fas fa-plus-circle"></i> Add Item</li>
-                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> Stock Operations</li>
-                <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> Inventory Summary</li>
-                <li onclick="switchTab('reports')"><i class="fas fa-file-contract"></i> Reports</li>
-                <li onclick="logout()" style="margin-top: auto; color: #ff6b6b;"><i class="fas fa-power-off"></i> Logout</li>
+                <li onclick="switchTab('overview')" class="active">
+                    <i class="fas fa-chart-pie"></i> <span>Overview</span>
+                </li>
+                <li onclick="switchTab('add_item')">
+                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
+                </li>
+                <li onclick="switchTab('operations')">
+                    <i class="fas fa-dolly"></i> <span>Operations</span>
+                </li>
+                <li onclick="switchTab('inventory')">
+                    <i class="fas fa-boxes"></i> <span>Stock</span>
+                </li>
+                <li onclick="switchTab('reports')">
+                    <i class="fas fa-file-contract"></i> <span>Reports</span>
+                </li>
+                <li onclick="logout()" style="color: #ff4d4d; margin-top: auto;">
+                    <i class="fas fa-power-off"></i> <span>Logout</span>
+                </li>
             </ul>
         </nav>
 
@@ -235,18 +50,31 @@ a, button, input, select{ -webkit-tap-highlight-color: transparent; }
             <section id="tab-overview" class="active-section">
                 <h2>Stock Overview</h2>
 
-                <div id="stagnantBox" class="stagnant-container">
-                    <h3 style="color:#ff4d4d; font-size:18px;"><i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)</h3>
+                <div id="stagnantBox" class="stagnant-container" style="display: none;">
+                    <h3 style="color:#ff4d4d; font-size:16px; margin-bottom:10px;">
+                        <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
+                    </h3>
                     <div id="stagnantItems" class="stagnant-list"></div>
                 </div>
 
-                <h3 style="margin-bottom: 15px; color:#aaa;">Quantity by Category</h3>
-                <div id="categoryGrid" class="cards-grid"><p>Loading...</p></div>
+                <h3 style="margin-bottom: 15px; font-size: 14px;">Quantity by Category</h3>
+                <div id="categoryGrid" class="cards-grid">
+                    <p style="color: #aaa;">Loading Data...</p>
+                </div>
 
-                <h3 style="margin-top:30px; color:#ff6b6b">Pending Damage Reports</h3>
+                <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
                 <div class="table-wrapper">
                     <table class="glass-table">
-                        <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>By</th><th>Action</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th>Qty</th>
+                                <th>By</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
                         <tbody id="damageTable"></tbody>
                     </table>
                 </div>
@@ -255,45 +83,60 @@ a, button, input, select{ -webkit-tap-highlight-color: transparent; }
             <section id="tab-add_item" style="display: none;">
                 <h2>Add New Item</h2>
                 <form id="addItemForm" class="internal-form">
-                    <div class="form-group"><label>Item Name *</label><input type="text" id="itemName" required></div>
-                    <div class="form-group"><label>SKU</label><input type="text" id="itemSku"></div>
+                    <div class="form-group">
+                        <label>Item Name *</label>
+                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU (Unique ID)</label>
+                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
+                    </div>
                     <div class="form-group">
                         <label>Category</label>
                         <select id="itemCategory" class="glass-input">
-                            <option>Packing</option><option>Insole</option><option>Sole</option>
-                            <option>Upper</option><option>Cut Insole</option><option>Cut Upper</option>
+                            <option>Packing</option>
+                            <option>Insole</option>
+                            <option>Sole</option>
+                            <option>Upper</option>
+                            <option>Cut Insole</option>
+                            <option>Cut Upper</option>
                             <option>Line Order</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Size</label><input type="text" id="itemSize"></div>
+                    <div class="form-group">
+                        <label>Size</label>
+                        <input type="text" id="itemSize" placeholder="Ex: 10">
+                    </div>
                     <button type="submit">Save to Database</button>
                 </form>
             </section>
 
             <section id="tab-operations" style="display: none;">
                 <h2>Stock Operations (In/Out)</h2>
+                
                 <label>Select Item to Update:</label>
                 <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Type item name to select..." autocomplete="off">
+                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
                     <div id="opDropdown" class="dropdown-results"></div>
                 </div>
                 <input type="hidden" id="selectedItemId">
 
                 <div style="display:flex; gap:10px; margin-top:20px;">
-                    <select id="opType" class="glass-input" style="width:150px;">
-                        <option value="IN">STOCK IN</option>
-                        <option value="OUT">STOCK OUT</option>
+                    <select id="opType" class="glass-input" style="flex: 1;">
+                        <option value="IN">STOCK IN (+)</option>
+                        <option value="OUT">STOCK OUT (-)</option>
                     </select>
                     <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
                 </div>
-                <button onclick="performStockOp()" style="margin-top:10px; background:#00f2ff; color:black;">Update Stock</button>
+                
+                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
             </section>
 
             <section id="tab-inventory" style="display: none;">
-                <h2>Inventory Summary (Total Qty)</h2>
+                <h2>Inventory Summary</h2>
                 
                 <div class="search-wrapper" style="margin-bottom: 20px;">
-                    <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name to Filter..." autocomplete="off">
+                    <input type="text" id="inventorySearchInput" placeholder="🔍 Filter Item Name..." autocomplete="off">
                 </div>
 
                 <div class="table-wrapper">
@@ -302,7 +145,8 @@ a, button, input, select{ -webkit-tap-highlight-color: transparent; }
                             <tr>
                                 <th>Category</th>
                                 <th>Item Name</th>
-                                <th>Total Qty</th> <th>Status</th>
+                                <th>Total Qty</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="inventoryTable">
@@ -313,24 +157,29 @@ a, button, input, select{ -webkit-tap-highlight-color: transparent; }
 
             <section id="tab-reports" style="display: none;">
                 <h2>Reports System</h2>
+                
                 <div class="date-filters">
-                    <label>From: <input type="date" id="dateFrom" class="date-input"></label>
-                    <label>To: <input type="date" id="dateTo" class="date-input"></label>
+                    <label>From: <input type="date" id="dateFrom" class="glass-input"></label>
+                    <label>To: <input type="date" id="dateTo" class="glass-input"></label>
                 </div>
+
                 <div class="report-tabs">
                     <button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button>
                     <button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button>
-                    <button onclick="loadReport('ITEM')" class="tab-btn">Item History</button>
+                    <button onclick="loadReport('ITEM')" class="tab-btn">History</button>
                 </div>
+
                 <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
-                    <input type="text" id="repItemSearch" placeholder="Search item..." autocomplete="off">
+                    <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
                     <div id="repDropdown" class="dropdown-results"></div>
                 </div>
+
                 <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
 
         </main>
     </div>
+
     <script src="admin_script.js"></script>
 </body>
 </html>
