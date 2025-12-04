@@ -123,3 +123,153 @@ button:hover {
     text-align: center;
     font-size: 14px;
 }
+/* --- Dashboard Styles --- */
+
+.dashboard-container {
+    display: flex;
+    width: 90%;
+    height: 90vh;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+}
+
+/* Sidebar */
+.glass-sidebar {
+    width: 250px;
+    background: rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.glass-sidebar .profile {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.glass-sidebar ul {
+    list-style: none;
+}
+
+.glass-sidebar ul li {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 16px;
+}
+
+.glass-sidebar ul li:hover, .glass-sidebar ul li.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.glass-sidebar ul li i {
+    margin-right: 10px;
+}
+
+/* Main Content */
+.glass-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    color: white;
+}
+
+.section {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cards */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #23a2f6;
+}
+
+.glass-card.warning i { color: #f09819; }
+.glass-card.danger i { color: #ff512f; }
+
+.glass-card h3 { font-size: 32px; margin-bottom: 5px; }
+
+/* Table */
+.table-wrapper {
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.glass-table th, .glass-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-table th {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Internal Form (Add Item) */
+.internal-form {
+    position: relative;
+    background: none;
+    box-shadow: none;
+    border: none;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    transform: none;
+    top: auto;
+    left: auto;
+}
+
+.glass-input {
+    width: 100%;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+    padding: 0 10px;
+    color: white;
+    margin-top: 8px;
+}
+
+.glass-input option {
+    background-color: #080710;
+    color: white;
+}
