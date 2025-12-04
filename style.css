@@ -1,4 +1,3 @@
-/* --- 1. Global Reset & Body --- */
 *, *:before, *:after {
     padding: 0;
     margin: 0;
@@ -12,10 +11,9 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    overflow: hidden; /* පිටුව Scroll වෙන්නේ නෑ */
+    overflow: hidden;
 }
 
-/* --- 2. Background Shapes (මුල් පාට බෝල දෙක) --- */
 .background {
     width: 430px;
     height: 520px;
@@ -23,9 +21,9 @@ body {
     transform: translate(-50%, -50%);
     left: 50%;
     top: 50%;
-    z-index: 1;
 }
 
+/* පසුබිමේ ඇති පාට බෝල (Shapes) */
 .background .shape {
     height: 200px;
     width: 200px;
@@ -45,21 +43,20 @@ body {
     bottom: -80px;
 }
 
-/* --- 3. Login Form (Original Glass Style) --- */
+/* Glassmorphism Form එක (Login) */
 form {
     height: 520px;
     width: 400px;
-    background-color: rgba(255, 255, 255, 0.13);
+    background-color: rgba(255, 255, 255, 0.13); /* විනිවිද පෙනෙන සුදු */
     position: absolute;
     transform: translate(-50%, -50%);
     top: 50%;
     left: 50%;
     border-radius: 10px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px); /* බොඳ කිරීම */
     border: 2px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
     padding: 50px 35px;
-    z-index: 5;
 }
 
 form * {
@@ -83,7 +80,7 @@ label {
     font-weight: 500;
 }
 
-input, select {
+input {
     display: block;
     height: 50px;
     width: 100%;
@@ -94,17 +91,11 @@ input, select {
     font-size: 14px;
     font-weight: 300;
     transition: 0.3s;
-    color: white;
 }
 
-input:focus, select:focus {
+input:focus {
     background-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 0 10px #23a2f6;
-}
-
-select option {
-    background-color: #080710;
-    color: white;
 }
 
 button {
@@ -133,7 +124,7 @@ button:hover {
     font-size: 14px;
 }
 
-/* --- 4. Dashboard Styles (Original) --- */
+/* --- Dashboard Styles (Original) --- */
 
 .dashboard-container {
     display: flex;
@@ -167,8 +158,6 @@ button:hover {
 
 .glass-sidebar ul {
     list-style: none;
-    display: flex;
-    flex-direction: column;
 }
 
 .glass-sidebar ul li {
@@ -186,7 +175,9 @@ button:hover {
     color: white;
 }
 
-.glass-sidebar ul li i { margin-right: 10px; }
+.glass-sidebar ul li i {
+    margin-right: 10px;
+}
 
 /* Main Content */
 .glass-content {
@@ -196,9 +187,14 @@ button:hover {
     color: white;
 }
 
-/* Section Animation */
-.section { animation: fadeIn 0.5s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.section {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 /* Cards */
 .cards-grid {
@@ -214,16 +210,17 @@ button:hover {
     border-radius: 15px;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
 }
 
-/* Card Hover Effect (Original Simple Zoom) */
-.glass-card:hover { transform: scale(1.05); background: rgba(255, 255, 255, 0.15); }
-.glass-card.active-filter { border: 2px solid #23a2f6; box-shadow: 0 0 15px #23a2f6; }
+.glass-card i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #23a2f6;
+}
 
-.glass-card i { font-size: 40px; margin-bottom: 10px; color: #23a2f6; }
 .glass-card.warning i { color: #f09819; }
 .glass-card.danger i { color: #ff512f; }
+
 .glass-card h3 { font-size: 32px; margin-bottom: 5px; }
 
 /* Table */
@@ -232,14 +229,24 @@ button:hover {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     overflow: hidden;
-    width: 100%;
 }
 
-.glass-table { width: 100%; border-collapse: collapse; }
-.glass-table th, .glass-table td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-.glass-table th { background: rgba(255, 255, 255, 0.1); }
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-/* Internal Forms */
+.glass-table th, .glass-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-table th {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Internal Form (Add Item) */
 .internal-form {
     position: relative;
     background: none;
@@ -263,26 +270,30 @@ button:hover {
     margin-top: 8px;
 }
 
-/* Report Buttons & Badges */
+.glass-input option {
+    background-color: #080710;
+    color: white;
+}
+
+/* Report Buttons (Added for Full Features) */
 .report-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; color: white; cursor: pointer; border-radius: 5px; }
 .tab-btn.active { background: #23a2f6; color: black; font-weight: bold; }
-.report-search { padding: 10px; border-radius: 5px; border: none; width: 100%; max-width: 300px; margin-bottom: 10px; background: rgba(255,255,255,0.1); color: white; }
+.report-search { padding: 10px; border-radius: 5px; border: none; width: 300px; margin-bottom: 10px; background: rgba(255,255,255,0.1); color: white; }
 
 .badge { background: red; padding: 2px 6px; border-radius: 50%; font-size: 12px; margin-left: 5px; }
 .btn-action { padding: 5px 10px; margin: 2px; border-radius: 5px; cursor: pointer; color: white; font-size: 12px; border: none; }
-.btn-approve { background: #00e676; color: black; font-weight: 600; }
-.btn-reject { background: #ff4d4d; color: white; font-weight: 600; }
+.btn-approve { background: #00e676; color: black; font-weight: bold; }
+.btn-reject { background: #ff4d4d; color: white; font-weight: bold; }
 
-/* --- 5. MOBILE RESPONSIVE --- */
 
-@media (max-width: 768px) {
-    /* Container එක Full Screen */
+/* --- Mobile Responsive (මෙන්න ඔයා ඉල්ලපු Mobile කොටස) --- */
+@media (max-width: 600px) {
     .dashboard-container {
+        flex-direction: column;
         width: 100%;
         height: 100vh;
         border-radius: 0;
-        flex-direction: column;
         border: none;
     }
 
@@ -307,8 +318,8 @@ button:hover {
     
     .glass-sidebar ul {
         flex-direction: row;
-        width: 100%;
         justify-content: space-around;
+        width: 100%;
         margin: 0; padding: 0;
     }
 
@@ -331,6 +342,7 @@ button:hover {
     }
 
     .cards-grid { grid-template-columns: 1fr; gap: 15px; }
+    
     .table-wrapper { overflow-x: auto; }
     .glass-table { min-width: 600px; }
     
