@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCU Admin | Full Control</title>
+    <title>PCU Admin | Pro Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Interactive Cards */
+        .glass-card { cursor: pointer; transition: transform 0.2s; }
+        .glass-card:hover { transform: scale(1.05); background: rgba(255,255,255,0.15); }
+        .glass-card.active-filter { border: 2px solid #23a2f6; box-shadow: 0 0 15px #23a2f6; }
+        
+        /* Report Tabs */
+        .report-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; color: white; cursor: pointer; border-radius: 5px; }
+        .tab-btn.active { background: #23a2f6; }
+        
+        /* Search Input for Reports */
+        .report-search { padding: 10px; border-radius: 5px; border: none; width: 300px; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
 
@@ -22,11 +36,9 @@
                 <h3>Admin Panel</h3>
             </div>
             <ul>
-                <li onclick="showSection('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
+                <li onclick="showSection('overview')" class="active"><i class="fas fa-chart-pie"></i> Dashboard</li>
                 <li onclick="showSection('add-item')"><i class="fas fa-plus-circle"></i> Add Item</li>
-                <li onclick="showSection('inventory')"><i class="fas fa-boxes"></i> Inventory</li>
-                <li onclick="showSection('requests')"><i class="fas fa-bell"></i> Requests <span id="reqCount" class="badge">0</span></li>
-                <li onclick="showSection('reports')"><i class="fas fa-history"></i> Logs & Reports</li>
+                <li onclick="showSection('reports')"><i class="fas fa-file-alt"></i> Advanced Reports</li>
                 <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
             </ul>
         </nav>
@@ -34,19 +46,34 @@
         <main class="glass-content">
             
             <section id="overview" class="section">
-                <h2>Dashboard Overview</h2>
+                <h2>Live Overview <small style="font-size:12px; color:#aaa;">(Auto-Updates every 5s)</small></h2>
+                
                 <div class="cards-grid">
-                    <div class="glass-card"><i class="fas fa-box"></i><h3 id="totalItems">0</h3><p>Total Items</p></div>
-                    <div class="glass-card warning"><i class="fas fa-exclamation-triangle"></i><h3 id="lowStock">0</h3><p>Low Stock</p></div>
-                    <div class="glass-card danger"><i class="fas fa-bug"></i><h3 id="pendingDamages">0</h3><p>Pending Issues</p></div>
+                    <div class="glass-card" onclick="filterDashboard('ALL', this)">
+                        <i class="fas fa-boxes"></i><h3 id="totalItems">0</h3><p>Total Items</p>
+                    </div>
+                    <div class="glass-card warning" onclick="filterDashboard('LOW', this)">
+                        <i class="fas fa-exclamation-triangle"></i><h3 id="lowStock">0</h3><p>Low Stock</p>
+                    </div>
+                    <div class="glass-card danger" onclick="filterDashboard('OUT', this)">
+                        <i class="fas fa-times-circle"></i><h3 id="outStock">0</h3><p>Out of Stock</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:20px;">Inventory Status</h3>
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead><tr><th>Category</th><th>Item Name</th><th>Size</th><th>Qty</th><th>Status</th></tr></thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
                 </div>
             </section>
 
             <section id="add-item" class="section" style="display: none;">
                 <h2>Add New Item</h2>
                 <form id="addItemForm" class="internal-form">
-                    <div class="form-group"><label>Item Name</label><input type="text" id="itemName" required></div>
-                    <div class="form-group"><label>SKU</label><input type="text" id="itemSku"></div>
+                    <div class="form-group"><label>Item Name (Required)</label><input type="text" id="itemName" required></div>
+                    <div class="form-group"><label>SKU (Unique)</label><input type="text" id="itemSku"></div>
                     <div class="form-group">
                         <label>Category</label>
                         <select id="itemCategory" class="glass-input">
@@ -60,45 +87,42 @@
                 </form>
             </section>
 
-            <section id="inventory" class="section" style="display: none;">
-                <h2>Current Stock</h2>
-                <div class="table-wrapper">
-                    <table class="glass-table">
-                        <thead><tr><th>Cat</th><th>Item</th><th>Size</th><th>Qty</th><th>Status</th></tr></thead>
-                        <tbody id="inventoryTableBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="requests" class="section" style="display: none;">
-                <h2>Pending Damage/Shortage Reports</h2>
-                <div class="table-wrapper">
-                    <table class="glass-table">
-                        <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Reported By</th><th>Action</th></tr></thead>
-                        <tbody id="requestsTableBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
             <section id="reports" class="section" style="display: none;">
-                <h2>System Activity Log (History)</h2>
-                <div class="table-wrapper">
-                    <table class="glass-table" style="font-size: 0.9em;">
-                        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Item</th><th>Change</th><th>Line No</th></tr></thead>
-                        <tbody id="logsTableBody"></tbody>
+                <h2>System Reports</h2>
+                
+                <div class="report-tabs">
+                    <button class="tab-btn active" onclick="switchReport('normal')">Normal (Summary)</button>
+                    <button class="tab-btn" onclick="switchReport('advance')">Advance (Transactions)</button>
+                    <button class="tab-btn" onclick="switchReport('search')">Item History</button>
+                </div>
+
+                <div id="report-normal" class="report-view">
+                    <h3>Stock Summary by Category</h3>
+                    <div id="normalReportContent"></div>
+                </div>
+
+                <div id="report-advance" class="report-view" style="display:none;">
+                    <h3>Full Transaction Log (In/Out/Damage)</h3>
+                    <table class="glass-table" style="font-size:0.9em;">
+                        <thead><tr><th>Time</th><th>Action</th><th>Item</th><th>Qty</th><th>User</th><th>Details</th></tr></thead>
+                        <tbody id="advanceReportTable"></tbody>
                     </table>
                 </div>
+
+                <div id="report-search" class="report-view" style="display:none;">
+                    <h3>Search Specific Item History</h3>
+                    <input type="text" id="historySearchInput" class="report-search" placeholder="Enter Item Name (e.g., Kelzi)..." onkeyup="searchItemHistory()">
+                    
+                    <table class="glass-table">
+                        <thead><tr><th>Date</th><th>Action</th><th>Qty Changed</th><th>User</th><th>Balance (Logic)</th></tr></thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+
             </section>
 
         </main>
     </div>
-
     <script src="admin_script.js"></script>
-    <style>
-        .badge { background: red; padding: 2px 6px; border-radius: 50%; font-size: 12px; margin-left: 5px; }
-        .btn-action { padding: 5px 10px; margin: 2px; border-radius: 5px; cursor: pointer; color: white; font-size: 12px; }
-        .btn-approve { background: #00e676; }
-        .btn-reject { background: #ff4d4d; }
-    </style>
 </body>
 </html>
