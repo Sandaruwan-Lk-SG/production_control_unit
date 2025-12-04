@@ -15,7 +15,7 @@ body {
     overflow: hidden; /* පිටුව Scroll වෙන්නේ නෑ */
 }
 
-/* --- 2. Background Shapes (ලස්සන පාට බෝල) --- */
+/* --- 2. Background Shapes (මුල් පාට බෝල දෙක) --- */
 .background {
     width: 430px;
     height: 520px;
@@ -23,7 +23,7 @@ body {
     transform: translate(-50%, -50%);
     left: 50%;
     top: 50%;
-    z-index: 1; /* පිටුපසට යවන්න */
+    z-index: 1;
 }
 
 .background .shape {
@@ -45,7 +45,7 @@ body {
     bottom: -80px;
 }
 
-/* --- 3. Login Form Styles --- */
+/* --- 3. Login Form (Original Glass Style) --- */
 form {
     height: 520px;
     width: 400px;
@@ -133,7 +133,7 @@ button:hover {
     font-size: 14px;
 }
 
-/* --- 4. Dashboard Styles (Clean Glass) --- */
+/* --- 4. Dashboard Styles (Original) --- */
 
 .dashboard-container {
     display: flex;
@@ -196,6 +196,10 @@ button:hover {
     color: white;
 }
 
+/* Section Animation */
+.section { animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
 /* Cards */
 .cards-grid {
     display: grid;
@@ -210,10 +214,10 @@ button:hover {
     border-radius: 15px;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.2s;
     cursor: pointer;
 }
 
+/* Card Hover Effect (Original Simple Zoom) */
 .glass-card:hover { transform: scale(1.05); background: rgba(255, 255, 255, 0.15); }
 .glass-card.active-filter { border: 2px solid #23a2f6; box-shadow: 0 0 15px #23a2f6; }
 
@@ -235,21 +239,45 @@ button:hover {
 .glass-table th, .glass-table td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
 .glass-table th { background: rgba(255, 255, 255, 0.1); }
 
-/* Report Elements */
+/* Internal Forms */
+.internal-form {
+    position: relative;
+    background: none;
+    box-shadow: none;
+    border: none;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    transform: none;
+    top: auto;
+    left: auto;
+}
+
+.glass-input {
+    width: 100%;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+    padding: 0 10px;
+    color: white;
+    margin-top: 8px;
+}
+
+/* Report Buttons & Badges */
 .report-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; color: white; cursor: pointer; border-radius: 5px; }
 .tab-btn.active { background: #23a2f6; color: black; font-weight: bold; }
 .report-search { padding: 10px; border-radius: 5px; border: none; width: 100%; max-width: 300px; margin-bottom: 10px; background: rgba(255,255,255,0.1); color: white; }
 
-/* Buttons & Badges */
 .badge { background: red; padding: 2px 6px; border-radius: 50%; font-size: 12px; margin-left: 5px; }
 .btn-action { padding: 5px 10px; margin: 2px; border-radius: 5px; cursor: pointer; color: white; font-size: 12px; border: none; }
 .btn-approve { background: #00e676; color: black; font-weight: 600; }
 .btn-reject { background: #ff4d4d; color: white; font-weight: 600; }
 
-/* --- 5. MOBILE RESPONSIVE (වැදගත් කොටස) --- */
+/* --- 5. MOBILE RESPONSIVE --- */
 
 @media (max-width: 768px) {
+    /* Container එක Full Screen */
     .dashboard-container {
         width: 100%;
         height: 100vh;
@@ -285,8 +313,7 @@ button:hover {
     }
 
     .glass-sidebar ul li {
-        padding: 5px;
-        margin: 0;
+        padding: 5px; margin: 0;
         font-size: 10px;
         text-align: center;
         display: flex;
@@ -296,7 +323,7 @@ button:hover {
 
     .glass-sidebar ul li i { margin: 0 0 3px 0; font-size: 18px; }
 
-    /* Content Adjustment */
+    /* Content Area */
     .glass-content {
         width: 100%;
         padding: 20px 15px 80px 15px; /* Nav bar එකට ඉඩ */
@@ -304,7 +331,6 @@ button:hover {
     }
 
     .cards-grid { grid-template-columns: 1fr; gap: 15px; }
-    
     .table-wrapper { overflow-x: auto; }
     .glass-table { min-width: 600px; }
     
