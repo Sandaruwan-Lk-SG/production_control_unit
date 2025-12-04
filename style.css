@@ -1,3 +1,4 @@
+/* --- 1. Global Reset & Body --- */
 *, *:before, *:after {
     padding: 0;
     margin: 0;
@@ -7,13 +8,14 @@
 body {
     background-color: #080710;
     font-family: 'Poppins', sans-serif;
-    display: flex; /* මැදට ගන්න */
+    display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* පිටුව Scroll වෙන්නේ නෑ (App එකක් වගේ) */
 }
 
+/* --- 2. Background Shapes --- */
 .background {
     width: 430px;
     height: 520px;
@@ -23,7 +25,6 @@ body {
     top: 50%;
 }
 
-/* පසුබිමේ ඇති පාට බෝල (Shapes) */
 .background .shape {
     height: 200px;
     width: 200px;
@@ -43,20 +44,29 @@ body {
     bottom: -80px;
 }
 
-/* Glassmorphism Form එක */
+/* --- 3. Login Form Styles --- */
 form {
     height: 520px;
     width: 400px;
-    background-color: rgba(255, 255, 255, 0.13); /* විනිවිද පෙනෙන සුදු */
+    background-color: rgba(255, 255, 255, 0.13);
     position: absolute;
     transform: translate(-50%, -50%);
     top: 50%;
     left: 50%;
     border-radius: 10px;
-    backdrop-filter: blur(10px); /* බොඳ කිරීම */
+    backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
     padding: 50px 35px;
+}
+
+/* Mobile Fix for Login Form */
+@media (max-width: 450px) {
+    form {
+        width: 90%; /* ෆෝන් එකේදී පළල 90% ක් වෙයි */
+        height: auto;
+        padding: 30px 20px;
+    }
 }
 
 form * {
@@ -114,7 +124,7 @@ button {
 button:hover {
     background-color: #23a2f6;
     color: white;
-    transform: scale(1.02); /* Click කරද්දි පොඩි Animation එකක් */
+    transform: scale(1.02);
 }
 
 .error-msg {
@@ -123,7 +133,8 @@ button:hover {
     text-align: center;
     font-size: 14px;
 }
-/* --- Dashboard Styles --- */
+
+/* --- 4. Dashboard Layout (Desktop Default) --- */
 
 .dashboard-container {
     display: flex;
@@ -157,6 +168,8 @@ button:hover {
 
 .glass-sidebar ul {
     list-style: none;
+    display: flex;
+    flex-direction: column;
 }
 
 .glass-sidebar ul li {
@@ -182,10 +195,11 @@ button:hover {
 .glass-content {
     flex: 1;
     padding: 30px;
-    overflow-y: auto;
+    overflow-y: auto; /* Content එක විතරක් Scroll වෙන්න */
     color: white;
 }
 
+/* Section Animation */
 .section {
     animation: fadeIn 0.5s ease-in-out;
 }
@@ -195,7 +209,7 @@ button:hover {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Cards */
+/* Cards Grid */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -209,6 +223,18 @@ button:hover {
     border-radius: 15px;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.glass-card:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.glass-card.active-filter {
+    border: 2px solid #23a2f6;
+    box-shadow: 0 0 15px #23a2f6;
 }
 
 .glass-card i {
@@ -219,15 +245,15 @@ button:hover {
 
 .glass-card.warning i { color: #f09819; }
 .glass-card.danger i { color: #ff512f; }
-
 .glass-card h3 { font-size: 32px; margin-bottom: 5px; }
 
-/* Table */
+/* Table Styling */
 .table-wrapper {
     margin-top: 20px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     overflow: hidden;
+    width: 100%;
 }
 
 .glass-table {
@@ -245,7 +271,7 @@ button:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Internal Form (Add Item) */
+/* Form Styling (Internal) */
 .internal-form {
     position: relative;
     background: none;
@@ -273,108 +299,109 @@ button:hover {
     background-color: #080710;
     color: white;
 }
-/* --- 📱 Mobile View Adjustments (Media Query) --- */
-/* (This should be added to the end of your style.css file) */
 
-@media (max-width: 600px) {
+/* Report Buttons */
+.report-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; color: white; cursor: pointer; border-radius: 5px; }
+.tab-btn.active { background: #23a2f6; }
+.report-search { padding: 10px; border-radius: 5px; border: none; width: 100%; max-width: 300px; margin-bottom: 10px; }
 
-    /* 1. Global Container Adjustments */
+.badge { background: red; padding: 2px 6px; border-radius: 50%; font-size: 12px; margin-left: 5px; }
+.btn-action { padding: 5px 10px; margin: 2px; border-radius: 5px; cursor: pointer; color: white; font-size: 12px; border: none; }
+.btn-approve { background: #00e676; color:black; font-weight:bold; }
+.btn-reject { background: #ff4d4d; color:white; font-weight:bold; }
+
+
+/* --- 5. MOBILE RESPONSIVE STYLES (අත්‍යවශ්‍ය කොටස) --- */
+
+@media (max-width: 768px) {
+
+    /* Container එක Full Screen කරනවා */
     .dashboard-container {
-        flex-direction: column; /* Stacks sidebar and content vertically */
-        padding: 0; /* Remove padding for full-width content */
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        flex-direction: column; /* උඩ ඉඳන් පහලට */
+        border: none;
     }
 
-    /* 2. Sidebar Adjustments */
+    /* Sidebar එක පහලට (Bottom Nav) ගන්නවා */
     .glass-sidebar {
-        width: 100%; /* Full width */
-        height: auto; /* Height adapts to content */
-        position: fixed; /* Make the sidebar fixed at the bottom for easy access */
+        width: 100%;
+        height: 60px;
+        position: fixed;
         bottom: 0;
         left: 0;
-        z-index: 1000; /* Ensure it stays above other content */
-        border-radius: 0; /* Remove corner radius */
-        box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Subtle top shadow */
-        background: rgba(255, 255, 255, 0.1); /* Ensure visibility */
-        backdrop-filter: blur(10px);
+        flex-direction: row; /* අයිකන් හරහට */
+        padding: 5px;
+        z-index: 1000;
+        background: rgba(16, 20, 30, 0.95); /* තද පාට පසුබිමක් */
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        justify-content: space-around;
+        align-items: center;
     }
-    
+
+    /* Profile සහ Title එක හංගනවා (Space මදි නිසා) */
     .glass-sidebar .profile {
-        display: none; /* Hide profile/Admin Panel text on mobile to save space */
+        display: none;
     }
 
     .glass-sidebar ul {
-        flex-direction: row; /* Layout menu items horizontally */
-        justify-content: space-around; /* Space items evenly */
-        padding: 5px 0;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+        margin: 0;
+        padding: 0;
     }
 
     .glass-sidebar ul li {
-        width: auto; /* Auto width for horizontal layout */
+        padding: 8px;
+        margin: 0;
+        font-size: 10px; /* අකුරු පොඩි කරනවා */
         text-align: center;
-        padding: 8px 5px; /* Smaller padding */
-        font-size: 10px; /* Smaller font size */
-        border-bottom: none; /* Remove bottom border */
-        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-radius: 5px;
     }
-    
+
     .glass-sidebar ul li i {
-        display: block; /* Icon on top */
-        margin-bottom: 3px;
-        font-size: 1.2em; /* Slightly larger icon */
-    }
-    
-    .glass-sidebar ul li:hover {
-        background: none; /* Remove hover background on touch devices */
-        color: #23a2f6; /* Only change color on hover/tap */
+        margin: 0 0 3px 0;
+        font-size: 18px;
     }
 
-    /* 3. Main Content Adjustments */
+    /* Main Content එක Adjust කිරීම */
     .glass-content {
-        width: 100%; /* Full width for content */
-        margin-top: 10px; /* Small top margin */
-        padding: 20px 15px 70px 15px; /* Add bottom padding to account for fixed bottom sidebar */
-        min-height: calc(100vh - 70px); /* Adjust min-height */
+        width: 100%;
+        padding: 20px 15px 80px 15px; /* යටින් ඉඩක් තියනවා Nav Bar එකට */
+        overflow-y: auto;
     }
 
-    /* 4. Grid and Card Adjustments */
+    /* Cards එක පෙළට ගැනීම */
     .cards-grid {
-        grid-template-columns: 1fr; /* Single column layout for cards */
+        grid-template-columns: 1fr; /* එක පේලියට */
         gap: 15px;
     }
 
-    .glass-card {
-        padding: 15px; /* Smaller padding */
-    }
-
-    /* 5. Table Adjustments (Making tables scrollable or stacking) */
+    /* Table එක Scroll වෙන්න හදනවා */
     .table-wrapper {
-        overflow-x: auto; /* Allows horizontal scrolling for wide tables */
-        width: 100%;
-        margin-bottom: 10px;
+        overflow-x: auto;
     }
     
-    /* Optional: Small font for table for better fit */
     .glass-table {
-        min-width: 500px; /* Force minimum width to prevent excessive squeezing */
-        font-size: 0.8em;
-    }
-    
-    .btn-action {
-        padding: 3px 6px;
-        font-size: 10px;
+        min-width: 600px; /* Table එකේ සයිස් එක අඩු වෙන්න දෙන්නෙ නෑ (Scroll වෙනවා) */
     }
 
-    /* 6. Form Adjustments */
-    .internal-form button {
-        width: 100%; /* Full width button */
-    }
-    
-    /* 7. Report Search Adjustments */
+    /* Report Tabs */
     .report-tabs {
-        flex-wrap: wrap; /* Wrap tabs if needed */
+        justify-content: space-between;
     }
-
-    .report-search {
-        width: 100%; /* Full width search bar */
+    
+    .tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
     }
 }
