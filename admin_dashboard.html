@@ -4,21 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PCU Admin | Master Control</title>
-    <link rel="stylesheet" href="style.css"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Smart Search Dropdown Styles */
-        .search-wrapper { position: relative; width: 100%; max-width: 400px; }
-        .dropdown-results { 
-            position: absolute; top: 100%; left: 0; width: 100%; 
-            background: #1a1a2e; border: 1px solid #444; border-radius: 0 0 5px 5px; 
-            max-height: 200px; overflow-y: auto; z-index: 1000; display: none; 
+        /* Slow Moving Alert Box */
+        .stagnant-container {
+            background: rgba(255, 77, 77, 0.15);
+            border: 1px solid #ff4d4d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none; /* JS වලින් පෙන්වනවා */
         }
-        .dropdown-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; color: white; }
-        .dropdown-item:hover { background: #23a2f6; color: black; }
+        .stagnant-title { color: #ff4d4d; font-size: 18px; margin-bottom: 10px; font-weight: bold; }
+        .stagnant-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .stagnant-badge { 
+            background: #ff4d4d; color: white; padding: 5px 10px; 
+            border-radius: 5px; font-size: 13px; display: flex; align-items: center; 
+        }
+        .stagnant-badge i { margin-right: 5px; }
 
-        /* Date Picker Styles */
-        .date-filters { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .date-input { padding: 8px; border-radius: 5px; border: 1px solid #555; background: rgba(255,255,255,0.1); color: white; }
+        /* Category Cards */
+        .cat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .cat-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-5px); }
+        .cat-title { color: #00f2ff; font-size: 16px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .cat-count { font-size: 32px; font-weight: bold; color: white; }
     </style>
 </head>
 <body>
@@ -29,10 +46,11 @@
         <nav class="glass-sidebar">
             <div class="profile"><i class="fas fa-user-secret fa-3x"></i><h3>Admin Panel</h3></div>
             <ul>
-                <li onclick="switchTab('overview')" class="active"><i class="fas fa-chart-pie"></i> Dashboard</li>
+                <li onclick="switchTab('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
                 <li onclick="switchTab('add_item')"><i class="fas fa-plus-circle"></i> Add Item</li>
-                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> Stock In/Out</li> <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> Inventory List</li>
-                <li onclick="switchTab('reports')"><i class="fas fa-file-contract"></i> Reports & Logs</li>
+                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> Operations</li>
+                <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> Inventory List</li>
+                <li onclick="switchTab('reports')"><i class="fas fa-file-contract"></i> Reports</li>
                 <li onclick="logout()" style="margin-top: auto; color: #ff6b6b;"><i class="fas fa-power-off"></i> Logout</li>
             </ul>
         </nav>
@@ -40,11 +58,17 @@
         <main class="glass-content">
             
             <section id="tab-overview" class="active-section">
-                <h2>Overview</h2>
-                <div class="cards-grid">
-                    <div class="glass-card"><i class="fas fa-box"></i><h3 id="statTotal">0</h3><p>Total Items</p></div>
-                    <div class="glass-card warning"><i class="fas fa-exclamation"></i><h3 id="statLow">0</h3><p>Low Stock</p></div>
-                    <div class="glass-card danger"><i class="fas fa-bell"></i><h3 id="statReq">0</h3><p>Requests</p></div>
+                <h2>Stock Overview</h2>
+
+                <div id="stagnantBox" class="stagnant-container">
+                    <div class="stagnant-title"><i class="fas fa-exclamation-circle"></i> Attention: Items Stuck for > 2 Days</div>
+                    <div id="stagnantItems" class="stagnant-list">
+                        </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color:#aaa;">Quantity by Category</h3>
+                <div id="categoryGrid" class="cards-grid">
+                    <p>Loading...</p>
                 </div>
 
                 <h3 style="margin-top:30px; color:#ff6b6b">Pending Damage Reports</h3>
@@ -76,17 +100,14 @@
 
             <section id="tab-operations" style="display: none;">
                 <h2>Stock Operations (In/Out)</h2>
-                
                 <label>Select Item to Update:</label>
                 <div class="search-wrapper">
                     <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
                     <div id="opDropdown" class="dropdown-results"></div>
                 </div>
-                <input type="hidden" id="selectedItemId"> <div style="display:flex; gap:10px; margin-top:20px;">
-                    <select id="opType" class="glass-input" style="width:150px;">
-                        <option value="IN">STOCK IN</option>
-                        <option value="OUT">STOCK OUT</option>
-                    </select>
+                <input type="hidden" id="selectedItemId">
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <select id="opType" class="glass-input" style="width:150px;"><option value="IN">STOCK IN</option><option value="OUT">STOCK OUT</option></select>
                     <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
                 </div>
                 <button onclick="performStockOp()" style="margin-top:10px; background:#00f2ff; color:black;">Update Stock</button>
@@ -104,29 +125,24 @@
 
             <section id="tab-reports" style="display: none;">
                 <h2>Reports System</h2>
-                
                 <div class="date-filters">
                     <label>From: <input type="date" id="dateFrom" class="date-input"></label>
                     <label>To: <input type="date" id="dateTo" class="date-input"></label>
                 </div>
-
                 <div class="report-tabs">
-                    <button onclick="loadReport('NORMAL')" class="tab-btn active">Normal (Summary)</button>
-                    <button onclick="loadReport('ADVANCE')" class="tab-btn">Advance (All Logs)</button>
-                    <button onclick="loadReport('ITEM')" class="tab-btn">Specific Item History</button>
+                    <button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button>
+                    <button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button>
+                    <button onclick="loadReport('ITEM')" class="tab-btn">Item History</button>
                 </div>
-
                 <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
-                    <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
+                    <input type="text" id="repItemSearch" placeholder="Search item..." autocomplete="off">
                     <div id="repDropdown" class="dropdown-results"></div>
                 </div>
-
                 <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
 
         </main>
     </div>
-
     <script src="admin_script.js"></script>
 </body>
 </html>
