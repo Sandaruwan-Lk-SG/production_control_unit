@@ -273,3 +273,108 @@ button:hover {
     background-color: #080710;
     color: white;
 }
+/* --- 📱 Mobile View Adjustments (Media Query) --- */
+/* (This should be added to the end of your style.css file) */
+
+@media (max-width: 600px) {
+
+    /* 1. Global Container Adjustments */
+    .dashboard-container {
+        flex-direction: column; /* Stacks sidebar and content vertically */
+        padding: 0; /* Remove padding for full-width content */
+    }
+
+    /* 2. Sidebar Adjustments */
+    .glass-sidebar {
+        width: 100%; /* Full width */
+        height: auto; /* Height adapts to content */
+        position: fixed; /* Make the sidebar fixed at the bottom for easy access */
+        bottom: 0;
+        left: 0;
+        z-index: 1000; /* Ensure it stays above other content */
+        border-radius: 0; /* Remove corner radius */
+        box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Subtle top shadow */
+        background: rgba(255, 255, 255, 0.1); /* Ensure visibility */
+        backdrop-filter: blur(10px);
+    }
+    
+    .glass-sidebar .profile {
+        display: none; /* Hide profile/Admin Panel text on mobile to save space */
+    }
+
+    .glass-sidebar ul {
+        flex-direction: row; /* Layout menu items horizontally */
+        justify-content: space-around; /* Space items evenly */
+        padding: 5px 0;
+    }
+
+    .glass-sidebar ul li {
+        width: auto; /* Auto width for horizontal layout */
+        text-align: center;
+        padding: 8px 5px; /* Smaller padding */
+        font-size: 10px; /* Smaller font size */
+        border-bottom: none; /* Remove bottom border */
+        cursor: pointer;
+    }
+    
+    .glass-sidebar ul li i {
+        display: block; /* Icon on top */
+        margin-bottom: 3px;
+        font-size: 1.2em; /* Slightly larger icon */
+    }
+    
+    .glass-sidebar ul li:hover {
+        background: none; /* Remove hover background on touch devices */
+        color: #23a2f6; /* Only change color on hover/tap */
+    }
+
+    /* 3. Main Content Adjustments */
+    .glass-content {
+        width: 100%; /* Full width for content */
+        margin-top: 10px; /* Small top margin */
+        padding: 20px 15px 70px 15px; /* Add bottom padding to account for fixed bottom sidebar */
+        min-height: calc(100vh - 70px); /* Adjust min-height */
+    }
+
+    /* 4. Grid and Card Adjustments */
+    .cards-grid {
+        grid-template-columns: 1fr; /* Single column layout for cards */
+        gap: 15px;
+    }
+
+    .glass-card {
+        padding: 15px; /* Smaller padding */
+    }
+
+    /* 5. Table Adjustments (Making tables scrollable or stacking) */
+    .table-wrapper {
+        overflow-x: auto; /* Allows horizontal scrolling for wide tables */
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    /* Optional: Small font for table for better fit */
+    .glass-table {
+        min-width: 500px; /* Force minimum width to prevent excessive squeezing */
+        font-size: 0.8em;
+    }
+    
+    .btn-action {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+
+    /* 6. Form Adjustments */
+    .internal-form button {
+        width: 100%; /* Full width button */
+    }
+    
+    /* 7. Report Search Adjustments */
+    .report-tabs {
+        flex-wrap: wrap; /* Wrap tabs if needed */
+    }
+
+    .report-search {
+        width: 100%; /* Full width search bar */
+    }
+}
