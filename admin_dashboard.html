@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCU Admin | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="background">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="dashboard-container">
+        
+        <nav class="glass-sidebar">
+            <div class="profile">
+                <i class="fas fa-user-shield fa-3x"></i>
+                <h3>Admin Panel</h3>
+            </div>
+            <ul>
+                <li onclick="showSection('overview')" class="active"><i class="fas fa-chart-pie"></i> Overview</li>
+                <li onclick="showSection('add-item')"><i class="fas fa-plus-circle"></i> Add Item</li>
+                <li onclick="showSection('inventory')"><i class="fas fa-boxes"></i> Inventory</li>
+                <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+            </ul>
+        </nav>
+
+        <main class="glass-content">
+            
+            <section id="overview" class="section active-section">
+                <h2>Dashboard Overview</h2>
+                <div class="cards-grid">
+                    <div class="glass-card">
+                        <i class="fas fa-box-open"></i>
+                        <h3 id="totalItems">0</h3>
+                        <p>Total Items</p>
+                    </div>
+                    <div class="glass-card warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3 id="lowStock">0</h3>
+                        <p>Low Stock</p>
+                    </div>
+                    <div class="glass-card danger">
+                        <i class="fas fa-heart-broken"></i>
+                        <h3 id="damageCount">0</h3>
+                        <p>Damages</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="add-item" class="section" style="display: none;">
+                <h2>Add New Item</h2>
+                <form id="addItemForm" class="internal-form">
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU (Optional)</label>
+                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="itemCategory" class="glass-input">
+                            <option value="Packing">Packing</option>
+                            <option value="Insole">Insole</option>
+                            <option value="Sole">Sole</option>
+                            <option value="Upper">Upper</option>
+                            <option value="Cut Insole">Cut Insole</option>
+                            <option value="Cut Upper">Cut Upper</option>
+                            <option value="Line Order">Line Order</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Size</label>
+                        <input type="text" id="itemSize" placeholder="Ex: 10">
+                    </div>
+                    <button type="submit">Add to Inventory</button>
+                </form>
+            </section>
+
+            <section id="inventory" class="section" style="display: none;">
+                <h2>Current Stock</h2>
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Item Name</th>
+                                <th>Size</th>
+                                <th>Qty</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="admin_script.js"></script>
+</body>
+</html>
