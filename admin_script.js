@@ -1,15 +1,17 @@
-// --- Configuration ---
 const API_URL = "https://backpcu-production.up.railway.app"; 
 
-// --- Auth & Setup ---
+// --- Global Data Store (ෆිල්ටර් කරන්න ලේසි වෙන්න) ---
+let globalInventory = [];
+let globalLogs = [];
+
+// --- Init ---
 window.onload = function() {
-    const role = localStorage.getItem('userRole');
-    const token = localStorage.getItem('token');
-    if (role !== 'admin' || !token) {
+    if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('token')) {
         window.location.href = 'index.html';
     } else {
-        loadDashboardStats(); // Load numbers
-        loadPendingRequests(); // Check for damages
+        fetchData(); // මුලින්ම Data ගන්න
+        // LIVE UPDATE: සෑම තත්පර 5කට වරක් Data අලුත් කරන්න
+        setInterval(fetchData, 5000); 
     }
 };
 
@@ -18,121 +20,186 @@ function getAuthHeaders() {
 }
 
 // --- Navigation ---
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(sectionId).style.display = 'block';
-    document.querySelectorAll('.glass-sidebar li').forEach(li => li.classList.remove('active'));
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
     
-    // Refresh Data based on Tab
-    if(sectionId === 'inventory') loadInventory();
-    if(sectionId === 'requests') loadPendingRequests();
-    if(sectionId === 'reports') loadActivityLogs();
+    // Reports Tab එකට ආවම Logs ගන්න
+    if(id === 'reports') fetchLogs(); 
 }
 
 function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
-// --- 1. Dashboard & Inventory ---
-async function loadDashboardStats() {
+// --- 1. CORE DATA FETCHING (Live) ---
+async function fetchData() {
     try {
         const res = await fetch(`${API_URL}/api/admin/stats?type=NORMAL`, { headers: getAuthHeaders() });
-        const data = await res.json();
+        if(!res.ok) return; // Error එකක් නම් නිකන් ඉන්න (Login out නොකර)
         
-        document.getElementById('totalItems').innerText = data.length;
-        document.getElementById('lowStock').innerText = data.filter(i => i.qty < 5).length;
-        updateInventoryTable(data);
-    } catch (e) { console.error(e); }
+        globalInventory = await res.json();
+        updateDashboardCards();
+        
+        // Active Filter එක අනුව Table එක update කරන්න
+        const activeCard = document.querySelector('.glass-card.active-filter');
+        if(activeCard) {
+            // දැනට Filter එකක් දාලා නම් ඒකම තියන්න
+            // (Code එක සංකීර්ණ නොවෙන්න අපි Default Table එක refresh කරමු, filter එක අයින් වෙයි Live update එකේදී. 
+            // නමුත් User experience එකට අපි දැනට Default all පෙන්නමු)
+             if(!activeCard.classList.contains('filtered-mode')) renderInventoryTable(globalInventory);
+        } else {
+            renderInventoryTable(globalInventory);
+        }
+
+    } catch (e) { console.error("Live Update Error", e); }
 }
 
-function updateInventoryTable(data) {
+// --- 2. DASHBOARD INTERACTIVITY ---
+function updateDashboardCards() {
+    document.getElementById('totalItems').innerText = globalInventory.length;
+    document.getElementById('lowStock').innerText = globalInventory.filter(i => i.qty < 5 && i.qty > 0).length;
+    document.getElementById('outStock').innerText = globalInventory.filter(i => i.qty <= 0).length;
+}
+
+// කාඩ් එක Click කලහම වැඩ කරන කොටස
+function filterDashboard(type, cardElement) {
+    // 1. Visual Effect
+    document.querySelectorAll('.glass-card').forEach(c => c.classList.remove('active-filter', 'filtered-mode'));
+    cardElement.classList.add('active-filter', 'filtered-mode');
+
+    // 2. Filter Logic
+    let filteredData = [];
+    if (type === 'ALL') filteredData = globalInventory;
+    else if (type === 'LOW') filteredData = globalInventory.filter(i => i.qty < 5 && i.qty > 0);
+    else if (type === 'OUT') filteredData = globalInventory.filter(i => i.qty <= 0);
+
+    // 3. Render
+    renderInventoryTable(filteredData);
+}
+
+function renderInventoryTable(data) {
     const tbody = document.getElementById('inventoryTableBody');
     tbody.innerHTML = '';
     data.forEach(item => {
-        let status = item.qty < 5 ? (item.qty <= 0 ? '<span style="color:red">Out</span>' : '<span style="color:orange">Low</span>') : '<span style="color:green">OK</span>';
+        let status = item.qty <= 0 ? '<span style="color:red">Out of Stock</span>' : 
+                     (item.qty < 5 ? '<span style="color:orange">Low Stock</span>' : '<span style="color:#00e676">In Stock</span>');
         tbody.innerHTML += `<tr><td>${item.category}</td><td>${item.item_name}</td><td>${item.size||'-'}</td><td>${item.qty}</td><td>${status}</td></tr>`;
     });
 }
 
-// --- 2. Add Item ---
+// --- 3. ADD ITEM (With Error Handling) ---
 document.getElementById('addItemForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    // (කලින් කෝඩ් එකම මෙතන තියෙන්න ඕන - මම කෙටි කලා)
+    const btn = e.target.querySelector('button');
+    const oldText = btn.innerText;
+    btn.innerText = "Checking...";
+
     const itemData = {
         item_name: document.getElementById('itemName').value,
         sku: document.getElementById('itemSku').value,
         category: document.getElementById('itemCategory').value,
         size: document.getElementById('itemSize').value
     };
-    await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(itemData) });
-    alert("Item Added!");
-    document.getElementById('addItemForm').reset();
+
+    try {
+        const res = await fetch(`${API_URL}/api/admin/add-item`, { 
+            method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(itemData) 
+        });
+        const result = await res.json();
+
+        if (res.ok) {
+            alert("✅ " + result.message);
+            document.getElementById('addItemForm').reset();
+            fetchData(); // Refresh immediately
+        } else {
+            alert("⚠️ " + result.error); // Duplicate Error එක මෙතනින් එයි
+        }
+    } catch (e) { alert("Error!"); }
+    btn.innerText = oldText;
 });
 
-// --- 3. Handle Requests (Damage Control) ---
-async function loadPendingRequests() {
-    // මේක Backend එකේ අලුත් API එකක් ඉල්ලනවා (damage reports). 
-    // දැනට අපි ලොග් එකෙන් මේක ෆිල්ටර් කරගන්න හැටි හදමු, නැත්නම් Backend එකට පොඩි කෑල්ලක් දාන්න වෙනවා.
-    // සරලව තියාගන්න, අපි Reports table එකෙන් Damage පෙන්නමු.
-    
-    // NOTE: Backend එකේ අපි 'damage_reports' table එකට වෙනම API එකක් හැදුවේ නෑ නේද?
-    // ඒ නිසා අපි 'ADVANCE' stats වලින් දත්ත ගමු.
-    
+// --- 4. ADVANCED REPORTS ---
+async function fetchLogs() {
     try {
         const res = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getAuthHeaders() });
-        const logs = await res.json();
-        
-        // Damage/Shortage විතරක් ෆිල්ටර් කරන්න
-        const pending = logs.filter(l => l.action_type === 'DAMAGE' || l.action_type === 'SHORTAGE');
-        
-        document.getElementById('pendingDamages').innerText = pending.length;
-        document.getElementById('reqCount').innerText = pending.length;
-        
-        const tbody = document.getElementById('requestsTableBody');
-        tbody.innerHTML = '';
-        
-        if(pending.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No Pending Requests</td></tr>';
-            return;
-        }
-
-        pending.forEach(req => {
-            // Note: හරිනම් මෙතන Approve Button එක වැඩ කරන්න ID එක ඕන.
-            // දැනට අපි View Only හදමු. 
-            tbody.innerHTML += `
-                <tr>
-                    <td>${new Date(req.timestamp).toLocaleDateString()}</td>
-                    <td>${req.item_name_snapshot}</td>
-                    <td style="color:red">${req.action_type}</td>
-                    <td>${req.qty_changed}</td>
-                    <td>${req.user_name}</td>
-                    <td>
-                        <button class="btn-action btn-approve" onclick="alert('Feature coming soon')">Replace</button>
-                        <button class="btn-action btn-reject" onclick="alert('Feature coming soon')">Remove</button>
-                    </td>
-                </tr>`;
-        });
-    } catch (e) { console.error(e); }
+        globalLogs = await res.json();
+        generateNormalReport(); // Default view
+    } catch(e) { console.error(e); }
 }
 
-// --- 4. Logs History ---
-async function loadActivityLogs() {
-    try {
-        const res = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getAuthHeaders() });
-        const logs = await res.json();
-        
-        const tbody = document.getElementById('logsTableBody');
-        tbody.innerHTML = '';
-        
-        logs.forEach(log => {
-            let color = log.action_type === 'IN' ? 'green' : (log.action_type === 'OUT' ? 'orange' : 'red');
-            tbody.innerHTML += `
-                <tr>
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                    <td>${log.user_name}</td>
-                    <td style="color:${color}; font-weight:bold">${log.action_type}</td>
-                    <td>${log.item_name_snapshot}</td>
-                    <td>${log.qty_changed}</td>
-                    <td>${log.line_number || '-'}</td>
-                </tr>`;
+function switchReport(type) {
+    document.querySelectorAll('.report-view').forEach(v => v.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(`report-${type}`).style.display = 'block';
+    event.target.classList.add('active');
+
+    if(type === 'normal') generateNormalReport();
+    if(type === 'advance') generateAdvanceReport();
+}
+
+// A. Normal Report (Grouped by Category)
+function generateNormalReport() {
+    const container = document.getElementById('normalReportContent');
+    container.innerHTML = '';
+
+    // Grouping Logic
+    const categories = {};
+    globalInventory.forEach(item => {
+        if(!categories[item.category]) categories[item.category] = [];
+        categories[item.category].push(item);
+    });
+
+    // Create Tables per Category
+    for (const [cat, items] of Object.entries(categories)) {
+        let html = `<h4 style="color:#23a2f6; margin-top:15px; border-bottom:1px solid #555;">${cat}</h4>`;
+        html += `<table class="glass-table" style="width:100%">`;
+        items.forEach(i => {
+            html += `<tr><td width="50%">${i.item_name}</td><td width="20%">${i.size||'-'}</td><td>Qty: <strong>${i.qty}</strong></td></tr>`;
         });
-    } catch (e) { console.error(e); }
+        html += `</table>`;
+        container.innerHTML += html;
+    }
+}
+
+// B. Advance Report (Full Log)
+function generateAdvanceReport() {
+    const tbody = document.getElementById('advanceReportTable');
+    tbody.innerHTML = '';
+    globalLogs.forEach(log => {
+        let color = log.action_type === 'IN' ? 'green' : (log.action_type === 'OUT' ? 'orange' : 'red');
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(log.timestamp).toLocaleString()}</td>
+                <td style="color:${color}">${log.action_type}</td>
+                <td>${log.item_name_snapshot}</td>
+                <td>${log.qty_changed}</td>
+                <td>${log.user_name}</td>
+                <td>${log.line_number || log.category}</td>
+            </tr>`;
+    });
+}
+
+// C. Item History Search
+function searchItemHistory() {
+    const query = document.getElementById('historySearchInput').value.toLowerCase();
+    const tbody = document.getElementById('historyTableBody');
+    tbody.innerHTML = '';
+
+    if(query.length < 2) return;
+
+    // Filter logs for this item name
+    const matches = globalLogs.filter(l => l.item_name_snapshot.toLowerCase().includes(query));
+
+    matches.forEach(log => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(log.timestamp).toLocaleDateString()} ${new Date(log.timestamp).toLocaleTimeString()}</td>
+                <td>${log.action_type}</td>
+                <td>${log.qty_changed}</td>
+                <td>${log.user_name}</td>
+                <td>Details: ${log.line_number || '-'}</td>
+            </tr>`;
+    });
+    
+    if(matches.length === 0) tbody.innerHTML = '<tr><td colspan="5">No history found for this item</td></tr>';
 }
