@@ -3,125 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU User | Inventory</title>
-    <link rel="stylesheet" href="style.css"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>PCU User | Inventory System</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        /* User Specific Styles */
-        .big-btn {
-            padding: 15px; font-size: 18px; border-radius: 12px; margin-top: 15px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .bg-green { background: #00e676; color: black; }
-        .bg-orange { background: #ffb300; color: black; }
-        .bg-red { background: #ff4d4d; color: white; }
-        
+        /* User Specific Custom Styles */
         .user-header { text-align: center; margin-bottom: 20px; }
-        .user-header h2 { font-size: 20px; color: #00f2ff; border: none; }
+        .user-header h2 { font-size: 20px; color: #00f2ff; border: none; margin-bottom: 5px; }
         
-        /* Highlight Selected Item */
+        .big-btn {
+            padding: 15px; font-size: 16px; border-radius: 12px; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .bg-green { background: #00e676; color: black; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4); }
+        .bg-orange { background: #ffb300; color: black; box-shadow: 0 4px 15px rgba(255, 179, 0, 0.4); }
+        .bg-red { background: #ff4d4d; color: white; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4); }
+        
         .selected-item-box {
             background: rgba(0, 242, 255, 0.1); border: 1px solid #00f2ff;
-            padding: 10px; border-radius: 10px; margin-bottom: 15px; display: none;
-            text-align: center;
+            padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none;
+            text-align: center; animation: fadeIn 0.3s ease;
         }
+        .item-highlight { font-size: 18px; font-weight: bold; display: block; color: white; }
+        .cat-highlight { color: #aaa; font-size: 12px; text-transform: uppercase; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <div class="background"><div class="shape"></div><div class="shape"></div></div>
+
     <div class="dashboard-container">
         
         <nav class="glass-sidebar">
-            <ul>
-                <li onclick="switchTab('in')" class="active"><i class="fas fa-arrow-down"></i> <span>Stock IN</span></li>
-                <li onclick="switchTab('out')"><i class="fas fa-arrow-up"></i> <span>Stock OUT</span></li>
-                <li onclick="switchTab('damage')"><i class="fas fa-exclamation-triangle"></i> <span>Report</span></li>
-                <li onclick="logout()" style="color: #ff4d4d;"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></li>
+            <div class="profile" style="display:none;"></div> <ul>
+                <li onclick="switchTab('in')" class="active">
+                    <i class="fas fa-arrow-down"></i> <span>IN</span>
+                </li>
+                <li onclick="switchTab('out')">
+                    <i class="fas fa-arrow-up"></i> <span>OUT</span>
+                </li>
+                <li onclick="switchTab('list')">
+                    <i class="fas fa-list"></i> <span>List</span>
+                </li>
+                <li onclick="switchTab('damage')">
+                    <i class="fas fa-exclamation-triangle"></i> <span>Report</span>
+                </li>
+                <li onclick="logout()" style="color: #ff4d4d;">
+                    <i class="fas fa-sign-out-alt"></i> <span>Exit</span>
+                </li>
             </ul>
         </nav>
 
         <main class="glass-content">
             
             <div class="user-header">
-                <h2>PCU Inventory System</h2>
-                <p style="color:#aaa; font-size:12px;">Select your name & perform action</p>
+                <h2>PCU Inventory</h2>
+                <p style="color:#777; font-size:12px;">Select name & perform action</p>
             </div>
 
-            <div class="form-group">
-                <label>Select Your Name:</label>
-                <select id="employeeName" class="glass-input" style="border: 1px solid #00f2ff;">
-                    <option value="">-- Loading Names... --</option>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="color: #00f2ff;">Select Your Name:</label>
+                <select id="employeeName" class="glass-input" style="border-color: #00f2ff;">
+                    <option value="">-- Loading... --</option>
                 </select>
             </div>
 
             <section id="tab-in" class="active-section">
-                <h3 style="color:#00e676"><i class="fas fa-box-open"></i> Stock IN (Add)</h3>
+                <h3 style="color:#00e676; margin-bottom:15px;"><i class="fas fa-box-open"></i> Stock IN (Add)</h3>
                 
                 <div class="search-wrapper">
-                    <input type="text" id="inSearch" placeholder="Search Item Name..." autocomplete="off">
+                    <input type="text" id="inSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
                     <div id="inDropdown" class="dropdown-results"></div>
                 </div>
 
                 <div id="inSelectedBox" class="selected-item-box">
-                    <span id="inItemName" style="font-weight:bold; display:block;"></span>
-                    <small id="inItemCat" style="color:#aaa;"></small>
+                    <span id="inItemName" class="item-highlight"></span>
+                    <small id="inItemCat" class="cat-highlight"></small>
                 </div>
-                <input type="hidden" id="inItemId"> <div class="form-group">
+                <input type="hidden" id="inItemId">
+
+                <div class="form-group">
                     <label>Size (Optional)</label>
-                    <input type="text" id="inSize" placeholder="Enter Size">
+                    <input type="text" id="inSize" placeholder="Ex: 10, XL">
                 </div>
 
                 <div class="form-group">
                     <label>Quantity</label>
-                    <input type="number" id="inQty" placeholder="Enter Quantity" style="font-size: 20px; font-weight: bold;">
+                    <input type="number" id="inQty" placeholder="0" style="font-size: 18px; font-weight: bold;">
                 </div>
 
                 <button onclick="submitTransaction('IN')" class="big-btn bg-green">
-                    <i class="fas fa-check-circle"></i> CONFIRM STOCK IN
+                    Confirm Stock IN
                 </button>
             </section>
 
 
             <section id="tab-out" style="display: none;">
-                <h3 style="color:#ffb300"><i class="fas fa-shipping-fast"></i> Stock OUT (Issue)</h3>
+                <h3 style="color:#ffb300; margin-bottom:15px;"><i class="fas fa-shipping-fast"></i> Stock OUT (Issue)</h3>
                 
                 <div class="search-wrapper">
-                    <input type="text" id="outSearch" placeholder="Search Item Name..." autocomplete="off">
+                    <input type="text" id="outSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
                     <div id="outDropdown" class="dropdown-results"></div>
                 </div>
 
                 <div id="outSelectedBox" class="selected-item-box" style="border-color: #ffb300; background: rgba(255, 179, 0, 0.1);">
-                    <span id="outItemName" style="font-weight:bold; display:block;"></span>
-                    <small id="outItemCat" style="color:#aaa;"></small>
-                    <div style="margin-top:5px; font-size:12px;">Available Stock: <b id="outCurrentQty" style="color: white;">0</b></div>
+                    <span id="outItemName" class="item-highlight"></span>
+                    <small id="outItemCat" class="cat-highlight"></small>
+                    <div style="margin-top:8px; font-size:13px; color:#ffb300;">
+                        Available: <b id="outCurrentQty" style="font-size:16px;">0</b>
+                    </div>
                 </div>
                 <input type="hidden" id="outItemId">
-                <input type="hidden" id="outCategory"> <div id="lineOrderBox" class="form-group" style="display: none; border: 1px dashed #ffb300; padding: 10px; border-radius: 8px;">
+                <input type="hidden" id="outCategory">
+
+                <div id="lineOrderBox" class="form-group" style="display: none; background: rgba(255, 179, 0, 0.1); padding: 10px; border-radius: 10px; border: 1px dashed #ffb300; margin-bottom: 15px;">
                     <label style="color: #ffb300;">Line Number (Required)</label>
                     <input type="text" id="lineNumber" placeholder="Ex: Line 05">
                 </div>
 
                 <div class="form-group">
                     <label>Quantity</label>
-                    <input type="number" id="outQty" placeholder="Enter Quantity">
+                    <input type="number" id="outQty" placeholder="0" style="font-size: 18px; font-weight: bold;">
                 </div>
 
                 <button onclick="submitTransaction('OUT')" class="big-btn bg-orange">
-                    <i class="fas fa-arrow-up"></i> CONFIRM STOCK OUT
+                    Confirm Stock OUT
                 </button>
             </section>
 
 
-            <section id="tab-damage" style="display: none;">
-                <h3 style="color:#ff4d4d"><i class="fas fa-bug"></i> Report Issue</h3>
+            <section id="tab-list" style="display: none;">
+                <h3 style="color:#00f2ff; margin-bottom:15px;"><i class="fas fa-list"></i> Current Inventory</h3>
                 
                 <div class="search-wrapper">
-                    <input type="text" id="dmgSearch" placeholder="Search Item Name..." autocomplete="off">
+                    <input type="text" id="userListSearch" placeholder="🔍 Filter List..." autocomplete="off">
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Size</th>
+                                <th>Qty</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userInventoryTable">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <section id="tab-damage" style="display: none;">
+                <h3 style="color:#ff4d4d; margin-bottom:15px;"><i class="fas fa-bug"></i> Report Issue</h3>
+                
+                <div class="search-wrapper">
+                    <input type="text" id="dmgSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
                     <div id="dmgDropdown" class="dropdown-results"></div>
                 </div>
                 <input type="hidden" id="dmgItemId">
 
                 <div id="dmgSelectedBox" class="selected-item-box" style="border-color: #ff4d4d; background: rgba(255, 77, 77, 0.1);">
-                    <span id="dmgItemName" style="font-weight:bold; display:block;"></span>
+                    <span id="dmgItemName" class="item-highlight"></span>
                 </div>
 
                 <div class="form-group">
@@ -134,11 +185,16 @@
 
                 <div class="form-group">
                     <label>Quantity</label>
-                    <input type="number" id="dmgQty" placeholder="Qty">
+                    <input type="number" id="dmgQty" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Note (Optional)</label>
+                    <textarea id="dmgNote" class="glass-input" rows="2" placeholder="Reason..."></textarea>
                 </div>
 
                 <button onclick="submitDamage()" class="big-btn bg-red">
-                    <i class="fas fa-paper-plane"></i> SUBMIT REPORT
+                    Submit Report
                 </button>
             </section>
 
