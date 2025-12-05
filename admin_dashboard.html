@@ -3,183 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin | Master Control</title>
+    <title>PCU User | Inventory System</title>
     
     <link rel="stylesheet" href="style.css">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* User Specific Custom Styles */
+        .user-header { text-align: center; margin-bottom: 20px; }
+        .user-header h2 { font-size: 20px; color: #00f2ff; border: none; margin-bottom: 5px; }
+        
+        .big-btn {
+            padding: 15px; font-size: 16px; border-radius: 12px; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .bg-green { background: #00e676; color: black; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4); }
+        .bg-orange { background: #ffb300; color: black; box-shadow: 0 4px 15px rgba(255, 179, 0, 0.4); }
+        .bg-red { background: #ff4d4d; color: white; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4); }
+        
+        .selected-item-box {
+            background: rgba(0, 242, 255, 0.1); border: 1px solid #00f2ff;
+            padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none;
+            text-align: center; animation: fadeIn 0.3s ease;
+        }
+        .item-highlight { font-size: 18px; font-weight: bold; display: block; color: white; }
+        .cat-highlight { color: #aaa; font-size: 12px; text-transform: uppercase; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
-    <div class="background">
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
+    <div class="background"><div class="shape"></div><div class="shape"></div></div>
 
     <div class="dashboard-container">
         
         <nav class="glass-sidebar">
-            <div class="profile">
-                <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
-                <h3>Admin Panel</h3>
-            </div>
-            <ul>
-                <li onclick="switchTab('overview')" class="active">
-                    <i class="fas fa-chart-pie"></i> <span>Overview</span>
+            <div class="profile" style="display:none;"></div> <ul>
+                <li onclick="switchTab('in')" class="active">
+                    <i class="fas fa-arrow-down"></i> <span>IN</span>
                 </li>
-                <li onclick="switchTab('add_item')">
-                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
+                <li onclick="switchTab('out')">
+                    <i class="fas fa-arrow-up"></i> <span>OUT</span>
                 </li>
-                <li onclick="switchTab('operations')">
-                    <i class="fas fa-dolly"></i> <span>Operations</span>
+                <li onclick="switchTab('list')">
+                    <i class="fas fa-list"></i> <span>List</span>
                 </li>
-                <li onclick="switchTab('inventory')">
-                    <i class="fas fa-boxes"></i> <span>Stock</span>
+                <li onclick="switchTab('damage')">
+                    <i class="fas fa-exclamation-triangle"></i> <span>Report</span>
                 </li>
-                <li onclick="switchTab('reports')">
-                    <i class="fas fa-file-contract"></i> <span>Reports</span>
-                </li>
-                <li onclick="logout()" style="color: #ff4d4d; margin-top: auto;">
-                    <i class="fas fa-power-off"></i> <span>Logout</span>
+                <li onclick="logout()" style="color: #ff4d4d;">
+                    <i class="fas fa-sign-out-alt"></i> <span>Exit</span>
                 </li>
             </ul>
         </nav>
 
         <main class="glass-content">
             
-            <section id="tab-overview" class="active-section">
-                <h2>Stock Overview</h2>
+            <div class="user-header">
+                <h2>PCU Inventory</h2>
+                <p style="color:#777; font-size:12px;">Select name & perform action</p>
+            </div>
 
-                <div id="stagnantBox" class="stagnant-container" style="display: none;">
-                    <h3 style="color:#ff4d4d; font-size:16px; margin-bottom:10px;">
-                        <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
-                    </h3>
-                    <div id="stagnantItems" class="stagnant-list"></div>
-                </div>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="color: #00f2ff;">Select Your Name:</label>
+                <select id="employeeName" class="glass-input" style="border-color: #00f2ff;">
+                    <option value="">-- Loading... --</option>
+                </select>
+            </div>
 
-                <h3 style="margin-bottom: 15px; font-size: 14px;">Quantity by Category</h3>
-                <div id="categoryGrid" class="cards-grid">
-                    <p style="color: #aaa;">Loading Data...</p>
-                </div>
-
-                <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
-                <div class="table-wrapper">
-                    <table class="glass-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Item</th>
-                                <th>Type</th>
-                                <th>Qty</th>
-                                <th>By</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="damageTable"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="tab-add_item" style="display: none;">
-                <h2>Add New Item</h2>
-                <form id="addItemForm" class="internal-form">
-                    <div class="form-group">
-                        <label>Item Name *</label>
-                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
-                    </div>
-                    <div class="form-group">
-                        <label>SKU (Unique ID)</label>
-                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="itemCategory" class="glass-input">
-                            <option>Packing</option>
-                            <option>Insole</option>
-                            <option>Sole</option>
-                            <option>Upper</option>
-                            <option>Cut Insole</option>
-                            <option>Cut Upper</option>
-                            <option>Line Order</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Size</label>
-                        <input type="text" id="itemSize" placeholder="Ex: 10">
-                    </div>
-                    <button type="submit">Save to Database</button>
-                </form>
-            </section>
-
-            <section id="tab-operations" style="display: none;">
-                <h2>Stock Operations (In/Out)</h2>
+            <section id="tab-in" class="active-section">
+                <h3 style="color:#00e676; margin-bottom:15px;"><i class="fas fa-box-open"></i> Stock IN (Add)</h3>
                 
-                <label>Select Item to Update:</label>
                 <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
-                    <div id="opDropdown" class="dropdown-results"></div>
+                    <input type="text" id="inSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
+                    <div id="inDropdown" class="dropdown-results"></div>
                 </div>
-                <input type="hidden" id="selectedItemId">
 
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <select id="opType" class="glass-input" style="flex: 1;">
-                        <option value="IN">STOCK IN (+)</option>
-                        <option value="OUT">STOCK OUT (-)</option>
-                    </select>
-                    <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
+                <div id="inSelectedBox" class="selected-item-box">
+                    <span id="inItemName" class="item-highlight"></span>
+                    <small id="inItemCat" class="cat-highlight"></small>
                 </div>
-                
-                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
+                <input type="hidden" id="inItemId">
+
+                <div class="form-group">
+                    <label>Size (Optional)</label>
+                    <input type="text" id="inSize" placeholder="Ex: 10, XL">
+                </div>
+
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="inQty" placeholder="0" style="font-size: 18px; font-weight: bold;">
+                </div>
+
+                <button onclick="submitTransaction('IN')" class="big-btn bg-green">
+                    Confirm Stock IN
+                </button>
             </section>
 
-            <section id="tab-inventory" style="display: none;">
-                <h2>Inventory Summary</h2>
+
+            <section id="tab-out" style="display: none;">
+                <h3 style="color:#ffb300; margin-bottom:15px;"><i class="fas fa-shipping-fast"></i> Stock OUT (Issue)</h3>
                 
-                <div class="search-wrapper" style="margin-bottom: 20px;">
-                    <input type="text" id="inventorySearchInput" placeholder="🔍 Filter Item Name..." autocomplete="off">
+                <div class="search-wrapper">
+                    <input type="text" id="outSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
+                    <div id="outDropdown" class="dropdown-results"></div>
+                </div>
+
+                <div id="outSelectedBox" class="selected-item-box" style="border-color: #ffb300; background: rgba(255, 179, 0, 0.1);">
+                    <span id="outItemName" class="item-highlight"></span>
+                    <small id="outItemCat" class="cat-highlight"></small>
+                    <div style="margin-top:8px; font-size:13px; color:#ffb300;">
+                        Available: <b id="outCurrentQty" style="font-size:16px;">0</b>
+                    </div>
+                </div>
+                <input type="hidden" id="outItemId">
+                <input type="hidden" id="outCategory">
+
+                <div id="lineOrderBox" class="form-group" style="display: none; background: rgba(255, 179, 0, 0.1); padding: 10px; border-radius: 10px; border: 1px dashed #ffb300; margin-bottom: 15px;">
+                    <label style="color: #ffb300;">Line Number (Required)</label>
+                    <input type="text" id="lineNumber" placeholder="Ex: Line 05">
+                </div>
+
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="outQty" placeholder="0" style="font-size: 18px; font-weight: bold;">
+                </div>
+
+                <button onclick="submitTransaction('OUT')" class="big-btn bg-orange">
+                    Confirm Stock OUT
+                </button>
+            </section>
+
+
+            <section id="tab-list" style="display: none;">
+                <h3 style="color:#00f2ff; margin-bottom:15px;"><i class="fas fa-list"></i> Current Inventory</h3>
+                
+                <div class="search-wrapper">
+                    <input type="text" id="userListSearch" placeholder="🔍 Filter List..." autocomplete="off">
                 </div>
 
                 <div class="table-wrapper">
                     <table class="glass-table">
                         <thead>
                             <tr>
-                                <th>Category</th>
-                                <th>Item Name</th>
-                                <th>Total Qty</th>
+                                <th>Item</th>
+                                <th>Size</th>
+                                <th>Qty</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="inventoryTable">
+                        <tbody id="userInventoryTable">
                             </tbody>
                     </table>
                 </div>
             </section>
 
-            <section id="tab-reports" style="display: none;">
-                <h2>Reports System</h2>
+
+            <section id="tab-damage" style="display: none;">
+                <h3 style="color:#ff4d4d; margin-bottom:15px;"><i class="fas fa-bug"></i> Report Issue</h3>
                 
-                <div class="date-filters">
-                    <label>From: <input type="date" id="dateFrom" class="glass-input"></label>
-                    <label>To: <input type="date" id="dateTo" class="glass-input"></label>
+                <div class="search-wrapper">
+                    <input type="text" id="dmgSearch" placeholder="🔍 Type Item Name..." autocomplete="off">
+                    <div id="dmgDropdown" class="dropdown-results"></div>
+                </div>
+                <input type="hidden" id="dmgItemId">
+
+                <div id="dmgSelectedBox" class="selected-item-box" style="border-color: #ff4d4d; background: rgba(255, 77, 77, 0.1);">
+                    <span id="dmgItemName" class="item-highlight"></span>
                 </div>
 
-                <div class="report-tabs">
-                    <button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button>
-                    <button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button>
-                    <button onclick="loadReport('ITEM')" class="tab-btn">History</button>
+                <div class="form-group">
+                    <label>Issue Type</label>
+                    <select id="dmgType" class="glass-input">
+                        <option value="DAMAGE">Broken / Damaged</option>
+                        <option value="SHORTAGE">Shortage (Received Less)</option>
+                    </select>
                 </div>
 
-                <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
-                    <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
-                    <div id="repDropdown" class="dropdown-results"></div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="dmgQty" placeholder="0">
                 </div>
 
-                <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
+                <div class="form-group">
+                    <label>Note (Optional)</label>
+                    <textarea id="dmgNote" class="glass-input" rows="2" placeholder="Reason..."></textarea>
+                </div>
+
+                <button onclick="submitDamage()" class="big-btn bg-red">
+                    Submit Report
+                </button>
             </section>
 
         </main>
     </div>
 
-    <script src="admin_script.js"></script>
+    <script src="user_script.js"></script>
 </body>
 </html>
