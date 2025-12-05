@@ -1,11 +1,15 @@
-/* --- 1. GLOBAL & BASICS --- */
+/* --- 1. GLOBAL VARIABLES & RESET --- */
 :root {
     --bg-dark: #0f1015;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --primary: #00f2ff;
+    --primary-dim: rgba(0, 242, 255, 0.1);
     --text-white: #ffffff;
     --text-muted: #9ca3af;
+    --danger: #ff4d4d;
+    --warning: #ffb300;
+    --success: #00e676;
     --radius: 12px;
 }
 
@@ -13,12 +17,17 @@
 
 body {
     background-color: var(--bg-dark);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', 'Poppins', sans-serif;
     color: var(--text-white);
     height: 100vh;
-    display: flex; justify-content: center; align-items: center; overflow: hidden;
+    width: 100vw;
+    overflow: hidden; /* App feel */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+/* --- 2. BACKGROUND SHAPES (Desktop Only) --- */
 .background { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 .background .shape {
     position: absolute; width: 400px; height: 400px; border-radius: 50%;
@@ -27,92 +36,226 @@ body {
 .shape:first-child { background: var(--primary); top: -10%; left: -10%; }
 .shape:last-child { background: #ff0055; bottom: -10%; right: -10%; }
 
+/* --- 3. LAYOUT CONTAINER --- */
 .dashboard-container {
-    display: flex; width: 100%; height: 100%; max-width: 1600px;
-    background: rgba(15, 16, 21, 0.9); backdrop-filter: blur(20px);
+    display: flex;
+    width: 95%;
+    max-width: 1600px;
+    height: 90vh;
+    background: rgba(15, 16, 21, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-/* --- SIDEBAR --- */
+/* --- 4. SIDEBAR (Desktop Style) --- */
 .glass-sidebar {
-    width: 260px; background: rgba(0, 0, 0, 0.3); border-right: 1px solid var(--glass-border);
-    padding: 20px; display: flex; flex-direction: column; z-index: 10;
+    width: 260px;
+    background: rgba(0, 0, 0, 0.3);
+    border-right: 1px solid var(--glass-border);
+    padding: 20px;
+    display: flex; flex-direction: column;
+    z-index: 10;
 }
-.glass-sidebar .profile { text-align: center; padding: 20px 0; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
+
+.glass-sidebar .profile {
+    text-align: center; padding: 20px 0; margin-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.glass-sidebar .profile h3 {
+    margin-top: 10px; font-size: 16px; letter-spacing: 1px; color: var(--primary);
+}
+
 .glass-sidebar ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.glass-sidebar ul li { padding: 12px 15px; border-radius: var(--radius); cursor: pointer; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; transition: 0.2s; }
-.glass-sidebar ul li i { width: 25px; font-size: 18px; margin-right: 10px; }
-.glass-sidebar ul li:hover, .glass-sidebar ul li.active { background: rgba(0, 242, 255, 0.1); color: var(--primary); }
+.glass-sidebar ul li {
+    padding: 12px 15px; border-radius: var(--radius); cursor: pointer;
+    color: var(--text-muted); transition: 0.2s; font-size: 14px; display: flex; align-items: center;
+}
+.glass-sidebar ul li i { width: 25px; font-size: 18px; margin-right: 10px; text-align: center; }
 
-/* --- CONTENT --- */
-.glass-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+/* Active & Hover States */
+.glass-sidebar ul li:hover, .glass-sidebar ul li.active {
+    background: var(--primary-dim); color: var(--primary);
+}
+
+/* --- 5. MAIN CONTENT --- */
+.glass-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto; /* Content Scroll */
+    position: relative;
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar Style */
+.glass-content::-webkit-scrollbar { width: 5px; }
+.glass-content::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+/* Section Headings */
 h2 { font-size: 22px; font-weight: 600; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+h3 { font-size: 16px; color: var(--text-muted); margin-bottom: 15px; font-weight: 500; }
 
-/* --- NEW MODERN OVERVIEW CARDS --- */
-.modern-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 30px;
+/* --- 6. CARDS & GRID --- */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px; margin-bottom: 30px;
 }
-.modern-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-    border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px;
-    position: relative; overflow: hidden; transition: transform 0.3s;
+
+/* Category Cards */
+.cat-card, .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 20px; border-radius: var(--radius);
+    text-align: center; transition: 0.3s;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
 }
-.modern-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.card-title { font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-.card-icon { font-size: 24px; color: var(--primary); opacity: 0.8; }
-.card-body { display: flex; justify-content: space-between; align-items: flex-end; }
-.card-stat { text-align: left; }
-.stat-value { font-size: 32px; font-weight: 700; color: white; line-height: 1; }
-.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-.card-sub { text-align: right; }
-.sub-val { font-size: 18px; font-weight: 600; color: #00e676; display: block; }
-.sub-label { font-size: 11px; color: var(--text-muted); }
+.cat-card:hover, .glass-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); }
 
-/* --- INVENTORY ACCORDION STYLE --- */
-.inventory-group { margin-bottom: 10px; border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.2); }
-.group-header {
-    padding: 15px 20px; background: rgba(255,255,255,0.03); cursor: pointer;
-    display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
+.cat-title, .glass-card p { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.cat-count, .glass-card h3 { font-size: 28px; font-weight: 700; color: white; }
+.glass-card i { font-size: 30px; margin-bottom: 10px; color: var(--primary); }
+
+.glass-card.warning i { color: var(--warning); }
+.glass-card.danger i { color: var(--danger); }
+
+/* --- 7. STAGNANT ALERT BOX --- */
+.stagnant-container {
+    background: rgba(255, 77, 77, 0.1);
+    border: 1px solid var(--danger);
+    padding: 20px; border-radius: var(--radius);
+    margin-bottom: 25px;
 }
-.group-header:hover { background: rgba(255,255,255,0.08); }
-.group-title { font-size: 16px; font-weight: 600; color: var(--primary); }
-.group-total { font-size: 14px; color: white; background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 20px; }
-.group-icon { transition: transform 0.3s; }
-.group-header.active .group-icon { transform: rotate(180deg); }
-
-.group-body { display: none; padding: 0; animation: slideDown 0.3s ease; }
-.group-item {
-    display: flex; justify-content: space-between; padding: 12px 20px;
-    border-top: 1px solid var(--glass-border); font-size: 14px;
+.stagnant-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.stagnant-badge {
+    background: var(--danger); color: white; padding: 5px 12px;
+    border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px;
 }
-.group-item:hover { background: rgba(0, 242, 255, 0.05); }
-.item-status.low { color: orange; } .item-status.out { color: #ff4d4d; } .item-status.ok { color: #00e676; }
 
-@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+/* --- 8. INPUTS, SEARCH & DROPDOWN --- */
+.internal-form .form-group { margin-bottom: 15px; }
+label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; }
 
-/* --- SEARCH & INPUTS --- */
+input, select, .glass-input {
+    width: 100%; padding: 12px 15px;
+    background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); color: white; outline: none; font-size: 14px;
+    transition: 0.3s;
+}
+input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); }
+
+/* Search Wrapper */
 .search-wrapper { position: relative; width: 100%; max-width: 500px; margin-bottom: 20px; }
-input, select {
-    width: 100%; padding: 12px 20px; border-radius: 50px; border: 1px solid var(--glass-border);
-    background: rgba(0,0,0,0.4); color: white; font-size: 14px; outline: none; transition: 0.3s;
+#inventorySearchInput, #opSearch, #repItemSearch { 
+    border-radius: 50px; padding-left: 20px; background: rgba(255,255,255,0.05); 
 }
-input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
 
-/* --- MOBILE RESPONSIVE --- */
+/* Floating Dropdown Results */
+.dropdown-results {
+    position: absolute; top: 100%; left: 0; width: 100%;
+    background: #15161b; border: 1px solid var(--glass-border);
+    border-radius: var(--radius); max-height: 250px; overflow-y: auto;
+    z-index: 100; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    margin-top: 5px;
+}
+.dropdown-item { padding: 12px 15px; border-bottom: 1px solid var(--glass-border); cursor: pointer; font-size: 14px; }
+.dropdown-item:hover { background: var(--primary); color: black; }
+
+/* --- 9. BUTTONS --- */
+button {
+    padding: 12px 20px; border: none; border-radius: var(--radius);
+    background: var(--primary); color: black; font-weight: 600; cursor: pointer;
+    transition: 0.2s; font-size: 14px; width: 100%; /* Mobile friendly default */
+}
+button:active { transform: scale(0.98); }
+
+/* Action Buttons (Table) */
+.btn-action { padding: 6px 12px; font-size: 12px; width: auto; margin-right: 5px; }
+.btn-approve { background: var(--success); color: black; }
+.btn-reject { background: rgba(255,77,77,0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+/* Tabs */
+.date-filters { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.report-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { background: transparent; border: 1px solid var(--glass-border); color: var(--text-muted); flex: 1; }
+.tab-btn.active { background: var(--primary); color: black; border-color: var(--primary); }
+
+/* --- 10. TABLES (SCROLLABLE) --- */
+.table-wrapper {
+    background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); overflow-x: auto; /* Horizontal Scroll for Mobile */
+    -webkit-overflow-scrolling: touch;
+}
+.glass-table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Min width forces scroll */
+.glass-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; background: rgba(255,255,255,0.02); white-space: nowrap; }
+.glass-table td { padding: 15px; border-top: 1px solid var(--glass-border); font-size: 14px; white-space: nowrap; }
+
+/* =========================================
+   MOBILE RESPONSIVE STYLES (APP MODE)
+   ========================================= */
 @media (max-width: 768px) {
-    .dashboard-container { flex-direction: column; height: 100vh; border-radius: 0; }
+    /* 1. Global Reset for Mobile */
+    body { 
+        background-color: #000; 
+        align-items: flex-start; 
+        height: auto; 
+        min-height: 100vh; 
+    }
+    
+    /* 2. Hide Desktop Background */
+    .background { display: none; }
+
+    /* 3. Main Container - Full Screen */
+    .dashboard-container {
+        width: 100%; height: auto; min-height: 100vh;
+        border-radius: 0; border: none; background: var(--bg-dark);
+        flex-direction: column; box-shadow: none; backdrop-filter: none;
+    }
+
+    /* 4. Bottom Navigation Bar (App Style) */
     .glass-sidebar {
-        width: 100%; height: 65px; position: fixed; bottom: 0; left: 0;
-        flex-direction: row; padding: 0; justify-content: space-around; align-items: center;
-        background: #101015; border-top: 1px solid #333; z-index: 2000;
+        width: 100%; height: 60px;
+        position: fixed; bottom: 0; left: 0;
+        flex-direction: row; padding: 0;
+        background: #121318; border-top: 1px solid #333; border-right: none;
+        z-index: 2000; justify-content: space-around; align-items: center;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
     }
     .glass-sidebar .profile, .glass-sidebar h3 { display: none; }
-    .glass-sidebar ul { width: 100%; display: flex; justify-content: space-evenly; }
-    .glass-sidebar ul li { flex-direction: column; padding: 5px; margin: 0; font-size: 10px; gap: 4px; background: none !important; }
+    
+    .glass-sidebar ul { 
+        flex-direction: row; width: 100%; justify-content: space-evenly; margin: 0; padding: 0;
+    }
+    .glass-sidebar ul li { 
+        flex-direction: column; padding: 5px; margin: 0; gap: 2px;
+        background: transparent !important; font-size: 10px; /* Small text */
+        border: none;
+    }
     .glass-sidebar ul li i { margin: 0; font-size: 20px; }
     .glass-sidebar ul li.active { color: var(--primary); }
+
+    /* 5. Content Area Adjustment */
+    .glass-content { 
+        padding: 20px 15px 80px 15px; /* Bottom padding prevents nav overlap */
+        height: auto; overflow: visible;
+    }
+
+    /* 6. Typography Fixes */
+    h2 { font-size: 20px; margin-top: 10px; }
+    .glass-card h3 { font-size: 24px; }
+
+    /* 7. Grid Fixes */
+    .cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; } /* 2 Columns */
     
-    .glass-content { padding: 20px 15px 85px 15px; }
-    .modern-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-value { font-size: 24px; } .sub-val { font-size: 14px; }
+    /* 8. Form & Inputs */
+    input, select, button { height: 45px; font-size: 16px; } /* Finger friendly sizes */
+    
+    /* 9. Dropdown Fix */
+    .dropdown-results {
+        position: fixed; top: auto; bottom: 70px; left: 10px; right: 10px; width: auto; 
+        max-height: 40vh; border: 1px solid #333; background: #1a1a2e;
+    }
 }
