@@ -1,59 +1,71 @@
-// ඔයාගේ Railway URL එක මෙතනට දාන්න (අවසානයේ / ස්ලෑෂ් එක නැතුව)
-// ඔයාගේ Backend Link එක
+// --- CONFIGURATION ---
+// ඔබේ Railway Backend Link එක
 const API_URL = "https://backpcu-production.up.railway.app"; 
 
+// --- LOGIN EVENT LISTENER ---
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
-@@ -9,9 +9,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); // Page refresh වීම නවත්වයි
+
+    // Input අගයන් ලබා ගැනීම
+    const usernameIn = document.getElementById('username').value;
+    const passwordIn = document.getElementById('password').value;
+    
+    // UI Elements
     const errorMsg = document.getElementById('errorMsg');
     const loginBtn = document.getElementById('loginBtn');
 
-    // Button Animation (Loading...)
-    // Button Animation
+    // 1. බොත්තම වෙනස් කිරීම (Loading Effect)
     loginBtn.innerText = "Checking...";
     loginBtn.style.opacity = "0.7";
+    loginBtn.disabled = true;
     errorMsg.innerText = "";
 
     try {
+        // 2. Backend එකට Request යැවීම
         const response = await fetch(`${API_URL}/api/auth/login`, {
-@@ -25,29 +26,32 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                username: usernameIn, 
+                password: passwordIn 
+            })
+        });
+
         const data = await response.json();
 
         if (response.ok) {
-            // Login සාර්ථකයි!
-            // Token එක අපි HTTPOnly Cookie එකක් විදියට Server එකෙන් එවන නිසා 
-            // මෙතන අමුතුවෙන් Save කරන්න දෙයක් නෑ.
-            
-            // Role එක අනුව පිටුව මාරු කිරීම (අපි ඊළඟට හදන පිටුවලට)
-            localStorage.setItem('userRole', data.role); // Role එක විතරක් මතක තියාගමු UI වෙනස්කම් වලට
-            // ✅ Login Success!
+            // ✅ Login සාර්ථකයි!
 
-            // 1. Token එක සහ විස්තර Save කරගන්න (ඉතා වැදගත්)
+            // A. Token සහ විස්තර LocalStorage හි Save කරගන්න
             localStorage.setItem('token', data.token); 
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('username', data.username);
 
-            // 2. Role එක අනුව පිටුව මාරු කරන්න
+            // B. Role එක අනුව පිටුව මාරු කිරීම
             if(data.role === 'admin') {
                 window.location.href = 'admin_dashboard.html';
             } else {
                 window.location.href = 'user_dashboard.html';
             }
         } else {
-            // Login අසාර්ථකයි
-            // Login Failed
+            // ❌ Login අසාර්ථකයි (වැරදි Password/Username)
             errorMsg.innerText = data.error || "Login Failed!";
-            loginBtn.innerText = "Log In";
-            loginBtn.style.opacity = "1";
             resetButton();
         }
 
     } catch (err) {
-        console.error(err);
+        // Server එක හෝ Internet අවුලක් නම්
+        console.error("Login Error:", err);
         errorMsg.innerText = "Server Connection Error!";
         resetButton();
     }
 
+    // බොත්තම යථා තත්වයට පත් කිරීම
     function resetButton() {
         loginBtn.innerText = "Log In";
         loginBtn.style.opacity = "1";
+        loginBtn.disabled = false;
     }
+});
