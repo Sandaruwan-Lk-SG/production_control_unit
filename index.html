@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCU Inventory | Login</title>
-    <style> /* Modern glassmorphism login style for the provided HTML
-   Save as style.css and keep the Google Font link in your HTML head.
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCU Inventory | Login</title>
+  <style>
+/* Modern glassmorphism login style for the provided HTML
+   Responsive improvements added: small-screen sizing, larger tap targets,
+   reduced-motion support, and footer/text adjustments.
 */
 
 :root{
@@ -18,8 +20,11 @@
   --muted: rgba(255,255,255,0.75);
   --danger: #ff6b6b;
   --radius: 14px;
+  --max-card-width: 420px;
+  --mobile-gap: 12px;
 }
 
+/* base reset */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html,body { height: 100%; }
 
@@ -32,6 +37,8 @@ body {
   display: grid;
   place-items: center;
   padding: 32px;
+  line-height: 1.35;
+  -webkit-font-feature-settings: "kern";
 }
 
 /* decorative background shapes */
@@ -51,6 +58,7 @@ body {
   opacity: 0.9;
   mix-blend-mode: screen;
   border-radius: 42% 58% 60% 40% / 45% 40% 60% 55%;
+  will-change: transform, opacity;
 }
 
 /* top-left blob */
@@ -91,7 +99,7 @@ form#loginForm{
   position: relative;
   z-index: 2;
   width: 420px;
-  max-width: calc(100% - 48px);
+  max-width: min(var(--max-card-width), calc(100% - 48px));
   padding: 36px;
   border-radius: var(--radius);
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
@@ -148,8 +156,8 @@ form#loginForm label{
 form#loginForm input[type="text"],
 form#loginForm input[type="password"]{
   width: 100%;
-  padding: 12px 14px;
-  font-size: 14px;
+  padding: 14px 14px;
+  font-size: 15px;
   color: white;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border-radius: 10px;
@@ -157,6 +165,7 @@ form#loginForm input[type="password"]{
   outline: none;
   transition: box-shadow .18s ease, transform .12s ease, border-color .12s ease;
   caret-color: var(--accent-2);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* placeholder */
@@ -174,17 +183,19 @@ form#loginForm input:focus{
 /* login button */
 #loginBtn{
   margin-top: 6px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border: none;
   border-radius: 12px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   cursor: pointer;
   letter-spacing: 0.2px;
   background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
   color: white;
   box-shadow: 0 8px 30px rgba(124,92,255,0.18), inset 0 -2px 0 rgba(0,0,0,0.12);
   transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+  width: 100%;
+  display: inline-block;
 }
 
 /* press effect */
@@ -223,55 +234,134 @@ form#loginForm input:focus{
 }
 
 /* responsive adjustments */
-@media (max-width: 480px){
+@media (max-width: 640px){
+  body { padding: 20px; }
+  :root { --max-card-width: 520px; --mobile-gap: 10px; }
   form#loginForm{
-    padding: 24px;
+    padding: 22px;
+    width: 100%;
+    max-width: calc(100% - 24px);
     border-radius: 12px;
+    gap: var(--mobile-gap);
   }
-
+  form#loginForm h3{ font-size: 18px; }
+  form#loginForm label{ font-size: 13px; }
+  form#loginForm input[type="text"],
+  form#loginForm input[type="password"]{
+    padding: 12px 12px;
+    font-size: 15px;
+  }
+  #loginBtn{ padding: 13px 12px; font-size: 15px; }
   .background .shape:nth-child(1){
-    width: 380px;
-    height: 380px;
+    width: 420px;
+    height: 420px;
     left: -180px;
     top: -160px;
     filter: blur(56px);
+  }
+  .background .shape:nth-child(2){
+    width: 360px;
+    height: 360px;
+    right: -120px;
+    bottom: -140px;
+    filter: blur(56px);
+  }
+  .pcu-footer{ font-size: 10px; padding-top: 8px; margin-top: 10px; }
+}
+
+/* very small phones */
+@media (max-width: 380px){
+  body { padding: 12px; }
+  form#loginForm{ padding: 18px; gap: 10px; }
+  form#loginForm h3{ font-size: 17px; }
+  .pcu-footer{ font-size: 10px; line-height: 1.3; }
+  .background .shape:nth-child(1){
+    width: 360px;
+    height: 360px;
+    left: -200px;
+    top: -180px;
+    filter: blur(64px);
   }
   .background .shape:nth-child(2){
     width: 300px;
     height: 300px;
     right: -140px;
     bottom: -150px;
-    filter: blur(56px);
+    filter: blur(64px);
+  }
+}
+
+/* desktop large screens: center nicely and slightly increase card shadow */
+@media (min-width: 1100px){
+  form#loginForm{
+    box-shadow:
+      0 20px 60px rgba(2,6,23,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.02);
   }
 }
 
 /* small accessibility improvement - focus-visible */
 :focus:not(:focus-visible){
   outline: none;
-    }</style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+}
+
+/* --------------------------- */
+/* NEW PCU FOOTER STYLE ADDED */
+/* --------------------------- */
+.pcu-footer{
+  margin-top: 18px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* reduce motion preference */
+@media (prefers-reduced-motion: reduce){
+  .background .shape,
+  form#loginForm,
+  #loginBtn,
+  form#loginForm input{
+    animation: none !important;
+    transition: none !important;
+  }
+}
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="background">
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
+  <div class="background" aria-hidden="true">
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
 
-    <form id="loginForm">
-        <h3>Inventory Login</h3>
+  <form id="loginForm" autocomplete="on" aria-label="PCU inventory login form">
+    <h3>Inventory Login</h3>
 
-        <label for="username">Username</label>
-        <input type="text" placeholder="Enter Username" id="username" required>
+    <label for="username">Username</label>
+    <input type="text" placeholder="Enter Username" id="username" name="username" required autocomplete="username" inputmode="text">
 
-        <label for="password">Password</label>
-        <input type="password" placeholder="Enter Password" id="password" required>
+    <label for="password">Password</label>
+    <input type="password" placeholder="Enter Password" id="password" name="password" required autocomplete="current-password" inputmode="text">
 
-        <button type="submit" id="loginBtn">Log In</button>
-        
-        <p id="errorMsg" class="error-msg"></p>
-    </form>
+    <button type="submit" id="loginBtn">Log In</button>
 
-    <script src="script.js"></script>
+    <p id="errorMsg" class="error-msg" role="alert" aria-live="polite"></p>
+
+    <!-- NEW FOOTER TEXT ADDED HERE -->
+    <p class="pcu-footer">
+      <strong>D.S.I Production Control Unit (PCU) System</strong><br>
+      This system is developed and maintained by the members of the Production Control Unit.
+      It is designed to enhance efficiency, accuracy, and coordination within the production process.
+      All rights to this system are reserved and protected under the PCU.<br>
+      © Copyright – Production Control Unit
+    </p>
+  </form>
+
+  <script src="script.js"></script>
 </body>
 </html>
