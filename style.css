@@ -1,443 +1,193 @@
-/* style.css
-   Responsive, mobile-first, glassy admin UI for PCU Admin Pro
-   - Mobile-first base styles
-   - Fluid layout using rem, vw, % (no rigid heights)
-   - Sidebar -> bottom nav on small screens
-   - Accessibility focus styles
-   - Micro-animations and shimmer utility
-*/
-
-/* -------------------------
-   Variables / Theme
-   ------------------------- */
-:root{
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  --bg-1: #0f1724;
-  --bg-2: #071026;
-  --accent-1: #00f2ff;
-  --accent-2: #6d5cff;
-  --muted: #9aa4b2;
-  --glass-bg: rgba(255,255,255,0.03);
-  --glass-border: rgba(255,255,255,0.06);
-  --danger: #ff4d4d;
-  --success: #3ce27b;
-
-  --radius-lg: 1.125rem;     /* 18px */
-  --radius-md: 0.75rem;      /* 12px */
-  --radius-sm: 0.5rem;       /* 8px */
-
-  --shadow-deep: 0 12px 40px rgba(2,6,23,0.65);
-  --shadow-soft: 0 6px 20px rgba(2,6,23,0.45);
-
-  --glass-blur: 8px;
-  --nav-height: 3.75rem;     /* 60px */
-  --gutter: 1rem;
+/* --- 1. GLOBAL VARIABLES & RESET --- */
+:root {
+    --bg-color: #0f1015;
+    --card-bg: rgba(30, 30, 40, 0.6);
+    --primary: #00f2ff;
+    --primary-dim: rgba(0, 242, 255, 0.1);
+    --text-main: #ffffff;
+    --text-muted: #a0a0a0;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --danger: #ff4d4d;
+    --success: #00e676;
+    --warning: #ffb300;
 }
 
-/* import font (optional if you already include in HTML) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+*, *:before, *:after { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* -------------------------
-   Reset & Base
-   ------------------------- */
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html,body{
-  height:100%;
-  margin:0;
-  background:
-    radial-gradient(800px 400px at 10% 10%, rgba(13,20,30,0.6), transparent),
-    radial-gradient(700px 350px at 90% 90%, rgba(12,10,30,0.5), transparent),
-    linear-gradient(180deg, var(--bg-1), var(--bg-2));
-  color: #e6eef8;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  padding: calc(var(--gutter) * 0.5);
-  line-height:1.35;
+body {
+    background-color: var(--bg-color);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-main);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Utility */
-.hidden{ display:none !important; }
-.center{ display:flex; align-items:center; justify-content:center; }
-
-/* -------------------------
-   Background decorative shapes
-   (kept minimal on small screens)
-   ------------------------- */
-.background{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
+/* --- 2. BACKGROUND (Desktop Only) --- */
+.background { position: fixed; width: 100%; height: 100%; z-index: -1; }
+.background .shape {
+    position: absolute; width: 400px; height: 400px; border-radius: 50%;
+    filter: blur(100px); opacity: 0.3;
 }
-.background .shape{
-  position:absolute;
-  width:48vw;
-  height:48vw;
-  max-width:720px;
-  max-height:720px;
-  background: linear-gradient(135deg, rgba(0,242,255,0.08), rgba(109,92,255,0.06));
-  filter: blur(64px);
-  border-radius: 38%;
-  transform-origin:center;
-  animation: floatSlow 9s ease-in-out infinite;
-  opacity:0.9;
-}
-.background .shape:nth-child(1){ left:-8vw; top:-12vh; transform:scale(0.95) rotate(8deg); animation-delay:0s; }
-.background .shape:nth-child(2){ right:-10vw; bottom:-18vh; transform:scale(1.05) rotate(-12deg); animation-delay:2s; }
+.shape:first-child { background: #1845ad; top: -10%; left: -10%; }
+.shape:last-child { background: #ff0055; bottom: -10%; right: -10%; }
 
-/* -------------------------
-   Layout: container (mobile-first)
-   ------------------------- */
-.dashboard-container{
-  position:relative;
-  max-width:1200px;
-  margin: 0 auto;
-  display:grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  align-items:start;
-  z-index:2;
-  padding-bottom: calc(var(--nav-height) + 1.5rem); /* room for bottom nav on mobile */
+/* --- 3. LAYOUT CONTAINER --- */
+.dashboard-container {
+    display: flex;
+    width: 95%;
+    max-width: 1400px;
+    height: 90vh;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-/* Glass panels base */
-.glass-panel{
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  border:1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
-  box-shadow: var(--shadow-soft);
+/* --- 4. SIDEBAR (Desktop) --- */
+.glass-sidebar {
+    width: 260px;
+    background: rgba(0, 0, 0, 0.2);
+    border-right: 1px solid var(--border-color);
+    padding: 30px 20px;
+    display: flex; flex-direction: column;
+    z-index: 10;
+}
+.glass-sidebar .profile { text-align: center; margin-bottom: 40px; }
+.glass-sidebar h3 { font-size: 18px; margin-top: 10px; font-weight: 600; letter-spacing: 1px; color: var(--primary); }
+
+.glass-sidebar ul { list-style: none; padding: 0; }
+.glass-sidebar ul li {
+    padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; cursor: pointer;
+    color: var(--text-muted); transition: 0.3s; display: flex; align-items: center; font-size: 14px;
+}
+.glass-sidebar ul li i { margin-right: 15px; font-size: 18px; width: 25px; text-align: center; }
+.glass-sidebar ul li:hover, .glass-sidebar ul li.active {
+    background: var(--primary-dim); color: var(--primary); border-left: 3px solid var(--primary);
 }
 
-/* -------------------------
-   Bottom nav (mobile)
-   ------------------------- */
-.glass-sidebar{
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:0.75rem;
-  width:calc(100% - 2rem);
-  max-width:980px;
-  padding:0.45rem;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.5rem;
-  z-index:40;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-  border:1px solid rgba(255,255,255,0.035);
-  box-shadow: 0 12px 40px rgba(3,7,25,0.6);
-  user-select:none;
-}
-.glass-sidebar ul{
-  list-style:none;
-  display:flex;
-  gap:0.25rem;
-  padding:0;
-  margin:0;
-  width:100%;
-  justify-content:space-around;
-  align-items:center;
-}
-.glass-sidebar ul li{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:0.45rem 0.55rem;
-  border-radius:10rem;
-  color:var(--muted);
-  font-weight:700;
-  font-size:0.82rem;
-  cursor:pointer;
-  min-width:3.2rem;
-  transition: all 180ms cubic-bezier(.2,.9,.2,1);
-  position:relative;
-  text-align:center;
-}
-.glass-sidebar ul li i{ font-size:1.05rem; color:var(--accent-1); display:block; }
-.glass-sidebar ul li span{ display:block; font-size:0.7rem; color:var(--muted); margin-top:2px; }
+/* --- 5. MAIN CONTENT AREA --- */
+.glass-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+h2 { font-size: 24px; margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 
-/* active nav glow */
-.glass-sidebar ul li.active{
-  background: linear-gradient(90deg, rgba(0,242,255,0.08), rgba(109,92,255,0.06));
-  color:#fff;
-  box-shadow: 0 8px 20px rgba(16,28,40,0.45);
-}
-.glass-sidebar ul li.active i{ filter:drop-shadow(0 6px 18px rgba(0,242,255,0.12)); }
+/* --- 6. CARDS & GRID --- */
+.cards-grid, .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
 
-/* small screens: hide fancy background shapes for performance */
-@media (max-width:520px){
-  .background .shape{ display:none; }
+.glass-card, .cat-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    padding: 20px; border-radius: 15px; text-align: center; position: relative;
+    transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
+.glass-card:hover, .cat-card:hover { transform: translateY(-5px); background: rgba(40, 40, 50, 0.8); }
 
-/* -------------------------
-   Main content area
-   ------------------------- */
-.glass-content{
-  width:100%;
-  min-height: calc(100vh - var(--nav-height) - 4rem);
-  max-width:1200px;
-  margin: 0 auto;
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  border:1px solid var(--glass-border);
-  backdrop-filter: blur(calc(var(--glass-blur) - 2px));
-  box-shadow: var(--shadow-soft);
-}
+.glass-card h3, .cat-count { font-size: 28px; font-weight: 700; margin: 5px 0; color: white; }
+.glass-card p, .cat-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.glass-card i { font-size: 35px; color: var(--primary); margin-bottom: 10px; opacity: 0.8; }
 
-/* header */
-.glass-content h2{ margin:0 0 0.8rem 0; font-size:1.1rem; font-weight:800; color:#f2fbff; display:flex; align-items:center; gap:0.6rem; }
+.glass-card.warning i { color: var(--warning); }
+.glass-card.danger i { color: var(--danger); }
 
-/* Sections */
-section{ margin-bottom:1rem; }
+/* Alerts */
+.stagnant-container { background: rgba(255, 77, 77, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+.stagnant-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.stagnant-badge { background: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; }
 
-/* Stagnant Box (alert) */
-#stagnantBox{
-  display:block;
-  background: rgba(255,77,77,0.10);
-  border:1px solid rgba(255,77,77,0.14);
-  color:var(--danger);
-  padding:0.75rem;
-  border-radius:var(--radius-md);
+/* --- 7. FORMS & INPUTS --- */
+.search-wrapper { position: relative; width: 100%; max-width: 500px; margin-bottom: 20px; }
+input, select {
+    width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.3); color: white; font-size: 14px; outline: none; transition: 0.3s;
 }
-#stagnantItems{ display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
-.pill{
-  padding:0.45rem 0.7rem;
-  border-radius:999px;
-  font-weight:800;
-  background: linear-gradient(90deg, rgba(255,77,77,0.12), rgba(255,77,77,0.06));
-  border:1px solid rgba(255,77,77,0.12);
-  color:var(--danger);
-  font-size:0.85rem;
-}
+input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
 
-/* -------------------------
-   Cards Grid (overview)
-   ------------------------- */
-.modern-grid{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:0.75rem;
-  margin-top:0.6rem;
+/* Floating Dropdown Results */
+.dropdown-results {
+    position: absolute; top: 100%; left: 0; width: 100%; background: #1a1a2e; border: 1px solid #333; 
+    border-radius: 0 0 10px 10px; max-height: 250px; overflow-y: auto; z-index: 100; display: none;
 }
-.card{
-  padding:0.85rem;
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.008));
-  border:1px solid rgba(255,255,255,0.02);
-  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms;
-}
-.card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-deep); }
-.card .k{ font-size:1.3rem; font-weight:800; color:#fff; }
-.card .s{ color:var(--muted); font-weight:700; font-size:0.9rem; }
+.dropdown-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; }
+.dropdown-item:hover { background: var(--primary); color: black; }
 
-/* responsive cards: 2-up and 3-up at larger sizes */
-@media (min-width:640px){
-  .modern-grid{ grid-template-columns: repeat(2, 1fr); }
+/* --- 8. BUTTONS --- */
+button, .btn-action {
+    padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: 0.2s; text-transform: uppercase;
 }
-@media (min-width:980px){
-  .dashboard-container{ grid-template-columns: 320px 1fr; gap:1.25rem; padding-bottom:2rem; }
-  .modern-grid{ grid-template-columns: repeat(3, 1fr); }
-  /* convert glass-sidebar into left vertical panel on wider screens */
-  .glass-sidebar{
-    position:relative;
-    left:auto;
-    transform:none;
-    bottom:auto;
-    width:100%;
-    max-width:320px;
-    height:auto;
-    padding:1rem;
-    border-radius:var(--radius-lg);
-    flex-direction:column;
-    justify-content:flex-start;
-    gap:0.75rem;
-  }
-  .glass-sidebar ul{ flex-direction:column; align-items:flex-start; gap:0.5rem; width:100%; }
-  .glass-sidebar .profile{ display:flex; align-items:center; gap:0.75rem; margin-bottom:0.25rem; }
-  .glass-sidebar ul li{ padding:0.7rem 0.8rem; min-width:unset; width:100%; font-size:0.95rem; }
-  .glass-sidebar ul li i{ font-size:1.1rem; }
-  .glass-content{ min-height: auto; }
-  .dashboard-container{ align-items:start; }
-}
+button:active { transform: scale(0.98); }
+.btn-approve { background: var(--success); color: black; }
+.btn-reject { background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid var(--danger); }
 
-/* -------------------------
-   Forms, Inputs, Search, Buttons
-   ------------------------- */
-input[type="text"],
-input[type="number"],
-select,
-textarea{
-  width:100%;
-  padding:0.7rem 0.85rem;
-  border-radius:0.6rem;
-  border:1px solid rgba(255,255,255,0.04);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  color:#eaf6ff;
-  font-size:0.95rem;
-  transition: box-shadow 160ms, border-color 160ms, transform 160ms;
-  outline:none;
-}
-input::placeholder, textarea::placeholder{ color:rgba(230,240,255,0.35); }
-input:focus, select:focus, textarea:focus{
-  box-shadow: 0 6px 20px rgba(0,242,255,0.06);
-  border-color: rgba(0,242,255,0.22);
-  transform: translateY(-2px);
-}
+.report-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn { flex: 1; background: transparent; border: 1px solid var(--border-color); color: white; }
+.tab-btn.active { background: var(--primary); color: black; font-weight: bold; border-color: var(--primary); }
 
-/* Buttons */
-button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:0.5rem;
-  padding:0.65rem 0.9rem;
-  border-radius:999px;
-  border:none;
-  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
-  color:#072026;
-  font-weight:800;
-  cursor:pointer;
-  transition: transform 160ms, box-shadow 160ms;
-}
-button:active{ transform: translateY(2px) scale(0.995); }
-button.secondary{
-  background:transparent;
-  border:1px solid rgba(255,255,255,0.04);
-  color:var(--muted);
-}
+/* --- 9. TABLES --- */
+.table-wrapper { width: 100%; overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; margin-top: 10px; }
+.glass-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.glass-table th { background: rgba(255,255,255,0.05); padding: 12px; text-align: left; font-size: 12px; color: var(--text-muted); }
+.glass-table td { padding: 12px; border-top: 1px solid var(--border-color); font-size: 14px; }
 
-/* -------------------------
-   Operations search dropdown
-   ------------------------- */
-.search-wrapper{ position:relative; width:100%; }
-#opDropdown{
-  position:absolute;
-  left:0;
-  right:0;
-  top:calc(100% + 0.4rem);
-  background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.008));
-  border:1px solid rgba(255,255,255,0.02);
-  border-radius:0.6rem;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-  max-height:18rem;
-  overflow:auto;
-  z-index:50;
-  display:none; /* show/hide via JS */
-}
-#opDropdown .item{
-  padding:0.6rem 0.75rem;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  gap:0.5rem;
-  align-items:center;
-  color:#eaf6ff;
-  font-weight:700;
-}
-#opDropdown .item:hover{ background: linear-gradient(90deg, rgba(0,242,255,0.02), rgba(109,92,255,0.02)); }
+/* =========================================
+   MOBILE RESPONSIVE STYLES (THE FIX)
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. Global Reset for Mobile */
+    body { background-color: #000; align-items: flex-start; height: auto; min-height: 100vh; overflow-y: auto; }
+    
+    /* 2. Hide Desktop Background */
+    .background { display: none; }
 
-/* -------------------------
-   Inventory list
-   ------------------------- */
-#inventoryListContainer{ display:grid; gap:0.6rem; margin-top:0.6rem; }
-.inventory-item{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.75rem;
-  padding:0.7rem;
-  border-radius:0.8rem;
-  background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.008));
-  border:1px solid rgba(255,255,255,0.02);
-  transition: transform 180ms, box-shadow 180ms;
-}
-.inventory-item:hover{ transform: translateY(-6px); box-shadow: 0 12px 28px rgba(3,8,20,0.45); }
-.inventory-item .meta{ display:flex; gap:0.6rem; align-items:center; }
-.inventory-item .meta .avatar{
-  width:3rem; height:3rem; border-radius:0.6rem; display:flex; align-items:center; justify-content:center;
-  background: linear-gradient(135deg, rgba(0,242,255,0.08), rgba(109,92,255,0.08));
-  font-weight:800; color:#032; font-size:1rem;
-}
-.inventory-item .meta .text .name{ font-weight:800; color:#fff; font-size:0.95rem; }
-.inventory-item .meta .text .sub{ color:var(--muted); font-size:0.82rem; }
+    /* 3. Main Container - Full Screen */
+    .dashboard-container {
+        width: 100%; height: auto; min-height: 100vh;
+        border-radius: 0; border: none; background: #0f1015;
+        flex-direction: column; box-shadow: none; backdrop-filter: none;
+    }
 
-/* -------------------------
-   Reports (top5)
-   ------------------------- */
-#top5ReportContainer{ display:grid; gap:0.6rem; margin-top:0.6rem; }
-.top5-category{
-  padding:0.65rem;
-  border-radius:0.6rem;
-  border:1px solid rgba(255,255,255,0.02);
-  background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.008));
+    /* 4. Bottom Navigation Bar */
+    .glass-sidebar {
+        width: 100%; height: 60px;
+        position: fixed; bottom: 0; left: 0;
+        flex-direction: row; padding: 0;
+        background: #151520; border-top: 1px solid #333; border-right: none;
+        z-index: 2000; justify-content: space-around;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    }
+    .glass-sidebar .profile, .glass-sidebar h3 { display: none; }
+    
+    .glass-sidebar ul { width: 100%; display: flex; justify-content: space-evenly; padding: 0; margin: 0; }
+    .glass-sidebar ul li {
+        flex-direction: column; padding: 8px 5px; margin: 0; border-radius: 0;
+        background: transparent !important; border: none !important; gap: 2px;
+    }
+    .glass-sidebar ul li i { margin: 0; font-size: 20px; }
+    .glass-sidebar ul li { font-size: 9px; } 
+    .glass-sidebar ul li.active { color: var(--primary); }
+
+    /* 5. Content Area */
+    .glass-content { padding: 20px 15px 85px 15px; height: auto; overflow: visible; }
+
+    /* 6. Typography */
+    h2 { font-size: 20px; }
+    .glass-card h3 { font-size: 24px; }
+
+    /* 7. Grid */
+    .cards-grid, .cat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    
+    /* 8. Form & Inputs */
+    .internal-form .form-group { margin-bottom: 10px; }
+    input, select, button { height: 45px; font-size: 16px; } 
+    
+    /* 9. Dropdown Fix */
+    .dropdown-results {
+        position: fixed; top: auto; bottom: 60px; left: 0; width: 100%;
+        max-height: 50vh; border-radius: 15px 15px 0 0; border: 1px solid #333;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+    }
 }
-.top5-category h4{ margin:0 0 0.45rem 0; font-size:0.95rem; font-weight:800; color:#fff; }
-.top5-category ol{ margin:0; padding-left:1.1rem; color:var(--muted); }
-.top5-category li{ margin:0.35rem 0; font-weight:700; color:#e8f6ff; font-size:0.92rem; }
-
-/* -------------------------
-   Micro-animations & loaders
-   ------------------------- */
-@keyframes floatSlow{
-  0%{ transform: translateY(0) rotate(0deg) scale(1); }
-  50%{ transform: translateY(-10px) rotate(3deg) scale(1.02); }
-  100%{ transform: translateY(0) rotate(0deg) scale(1); }
-}
-@keyframes shimmer{
-  0%{ background-position: -200% 0; }
-  100%{ background-position: 200% 0; }
-}
-.shimmer{
-  background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s linear infinite;
-}
-
-/* pop-in for items */
-@keyframes popIn{
-  0%{ opacity:0; transform: scale(0.98) translateY(6px); }
-  60%{ opacity:1; transform: scale(1.02) translateY(-2px); }
-  100%{ transform: scale(1) translateY(0); }
-}
-.appear{ animation: popIn 260ms ease both; }
-
-/* -------------------------
-   Accessibility focus
-   ------------------------- */
-:focus{ outline: 3px solid rgba(0,242,255,0.10); outline-offset: 3px; border-radius:0.5rem; }
-
-/* -------------------------
-   Small helpers
-   ------------------------- */
-.kpi{ display:flex; gap:0.45rem; align-items:center; }
-.kpi .dot{ width:0.55rem; height:0.55rem; border-radius:999px; background:var(--accent-1); box-shadow:0 6px 18px rgba(0,242,255,0.12); }
-
-/* -------------------------
-   Final tweaks for very large screens
-   ------------------------- */
-@media (min-width:1280px){
-  .glass-content{ padding:1.25rem; }
-  .card .k{ font-size:1.45rem; }
-  .glass-sidebar{ max-width:360px; }
-}
-
-/* -------------------------
-   Notes (how to use)
-   -------------------------
-   - On small screens (.glass-sidebar acts as bottom navigation)
-   - On >980px screens, layout becomes two-column: left nav + main content
-   - Use JS to toggle classes:
-       * show/hide #opDropdown (display:block)
-       * add .active to sidebar li to indicate selection
-       * add .appear to items for entrance animation
-   - Avoid inline fixed heights in HTML (e.g., hard-coded 720px). Let content grow.
-*/
-
-/* end of stylesheet */
