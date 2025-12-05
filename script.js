@@ -1,68 +1,79 @@
 // --- CONFIGURATION ---
-// ඔබේ Railway Backend Link එක
 const API_URL = "https://backpcu-production.up.railway.app"; 
 
 // --- LOGIN EVENT LISTENER ---
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Page refresh වීම නවත්වයි
+    e.preventDefault(); 
 
-    // Input අගයන් ලබා ගැනීම
-    const usernameIn = document.getElementById('username').value;
-    const passwordIn = document.getElementById('password').value;
+    // 1. Input ලබා ගැනීම සහ සුද්ද කිරීම (Mobile Space Fix)
+    // .trim() මගින් නමේ අගට හෝ මුලට වැරදීමකින් වැදුණු Space ඉවත් කරයි.
+    const usernameIn = document.getElementById('username').value.trim();
+    const passwordIn = document.getElementById('password').value.trim();
     
     // UI Elements
     const errorMsg = document.getElementById('errorMsg');
     const loginBtn = document.getElementById('loginBtn');
 
-    // 1. බොත්තම වෙනස් කිරීම (Loading Effect)
+    // Validation (හිස් නම් යවන්න එපා)
+    if (!usernameIn || !passwordIn) {
+        errorMsg.innerText = "Please enter Username & Password";
+        return;
+    }
+
+    // Button Loading Animation
     loginBtn.innerText = "Checking...";
     loginBtn.style.opacity = "0.7";
     loginBtn.disabled = true;
     errorMsg.innerText = "";
 
     try {
-        // 2. Backend එකට Request යැවීම
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            // Cookie සහ Security දත්ත හුවමාරු කිරීමට මෙය වැදගත්
+            credentials: 'include', 
             body: JSON.stringify({ 
                 username: usernameIn, 
                 password: passwordIn 
             })
         });
 
+        // Response එක JSON ද බලන්න (Server Error වලදී HTML එන්න පුළුවන් නිසා)
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("Server Error (Not JSON)");
+        }
+
         const data = await response.json();
 
         if (response.ok) {
             // ✅ Login සාර්ථකයි!
-
-            // A. Token සහ විස්තර LocalStorage හි Save කරගන්න
+            
+            // Token සහ විස්තර Save කරගන්න
             localStorage.setItem('token', data.token); 
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('username', data.username);
 
-            // B. Role එක අනුව පිටුව මාරු කිරීම
+            // පිටුව මාරු කිරීම
             if(data.role === 'admin') {
                 window.location.href = 'admin_dashboard.html';
             } else {
                 window.location.href = 'user_dashboard.html';
             }
         } else {
-            // ❌ Login අසාර්ථකයි (වැරදි Password/Username)
-            errorMsg.innerText = data.error || "Login Failed!";
+            // ❌ Login අසාර්ථකයි
+            errorMsg.innerText = data.error || "Login Failed! Check credentials.";
             resetButton();
         }
 
     } catch (err) {
-        // Server එක හෝ Internet අවුලක් නම්
         console.error("Login Error:", err);
-        errorMsg.innerText = "Server Connection Error!";
+        errorMsg.innerText = "Connection Error! Check Internet.";
         resetButton();
     }
 
-    // බොත්තම යථා තත්වයට පත් කිරීම
     function resetButton() {
         loginBtn.innerText = "Log In";
         loginBtn.style.opacity = "1";
