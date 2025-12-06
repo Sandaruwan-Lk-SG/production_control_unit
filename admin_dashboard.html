@@ -3,88 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin Pro</title>
+    <title>PCU Admin | Portal</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* විශේෂ: Dashboard එක මුලින් හංගන්න */
+        #dashboard-interface { display: none; opacity: 0; transition: opacity 1s ease; }
+    </style>
 </head>
 <body>
 
     <div class="background"><div class="shape"></div><div class="shape"></div></div>
 
-    <div class="dashboard-container">
+    <div id="portal-view" class="portal-container">
+        <div class="portal-ring-outer"></div>
+        <div class="portal-ring-inner"></div>
+        
+        <div class="portal-core">
+            <h3>PCU</h3>
+            <p>ADMIN</p>
+        </div>
+
+        <div class="orbit-item item-1" onclick="enterPortal('overview')">
+            <i class="fas fa-chart-pie"></i>
+            <span>Overview</span>
+        </div>
+        <div class="orbit-item item-2" onclick="enterPortal('add_item')">
+            <i class="fas fa-plus-circle"></i>
+            <span>Add Item</span>
+        </div>
+        <div class="orbit-item item-3" onclick="enterPortal('inventory')">
+            <i class="fas fa-boxes"></i>
+            <span>Stock</span>
+        </div>
+        <div class="orbit-item item-4" onclick="enterPortal('reports')">
+            <i class="fas fa-file-contract"></i>
+            <span>Reports</span>
+        </div>
+        <div class="orbit-item item-5" onclick="enterPortal('operations')">
+            <i class="fas fa-dolly"></i>
+            <span>Ops</span>
+        </div>
+    </div>
+
+    <div id="dashboard-interface" class="dashboard-container">
         
         <nav class="glass-sidebar">
-            <div class="profile"><i class="fas fa-shield-alt fa-3x" style="color:#00f2ff"></i><h3>Admin Panel</h3></div>
+            <div class="profile" onclick="exitPortal()" style="cursor: pointer;">
+                <i class="fas fa-arrow-left fa-2x" style="color: #00f2ff;"></i>
+                <h3 style="margin-top: 5px;">Back to Portal</h3>
+            </div>
             <ul>
-                <li onclick="switchTab('overview')" class="active"><i class="fas fa-chart-pie"></i> <span>Overview</span></li>
-                <li onclick="switchTab('add_item')"><i class="fas fa-plus-circle"></i> <span>Add Item</span></li>
-                <li onclick="switchTab('operations')"><i class="fas fa-dolly"></i> <span>Operations</span></li>
-                <li onclick="switchTab('inventory')"><i class="fas fa-boxes"></i> <span>Summary</span></li>
-                <li onclick="switchTab('reports')"><i class="fas fa-file-contract"></i> <span>Reports</span></li>
-                <li onclick="logout()" style="margin-top:auto; color:#ff4d4d;"><i class="fas fa-power-off"></i> <span>Logout</span></li>
+                <li onclick="switchTab('overview')" id="nav-overview"><i class="fas fa-chart-pie"></i> <span>Overview</span></li>
+                <li onclick="switchTab('add_item')" id="nav-add_item"><i class="fas fa-plus-circle"></i> <span>Add Item</span></li>
+                <li onclick="switchTab('operations')" id="nav-operations"><i class="fas fa-dolly"></i> <span>Operations</span></li>
+                <li onclick="switchTab('inventory')" id="nav-inventory"><i class="fas fa-boxes"></i> <span>Summary</span></li>
+                <li onclick="switchTab('reports')" id="nav-reports"><i class="fas fa-file-contract"></i> <span>Reports</span></li>
+                <li onclick="logout()" style="margin-top: auto; color: #ff4d4d;"><i class="fas fa-power-off"></i> <span>Logout</span></li>
             </ul>
         </nav>
 
         <main class="glass-content">
-            
             <section id="tab-overview" class="active-section">
                 <h2>Stock Overview</h2>
-                
-                <div id="stagnantBox" style="display:none; background:rgba(255,77,77,0.15); border:1px solid #ff4d4d; padding:15px; border-radius:10px; margin-bottom:20px;">
-                    <h3 style="color:#ff4d4d; font-size:16px; margin:0;"><i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)</h3>
-                    <div id="stagnantItems" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
+                <div id="stagnantBox" class="stagnant-container" style="display:none">
+                    <h3 style="color:#ff4d4d; font-size:16px;"><i class="fas fa-exclamation-circle"></i> Slow Moving Items</h3>
+                    <div id="stagnantItems" class="stagnant-list"></div>
                 </div>
-
-                <div id="modernGrid" class="modern-grid">
-                    <p style="color:#aaa">Loading...</p>
-                </div>
+                <div id="categoryGrid" class="cards-grid"><p>Loading...</p></div>
+                <h3 style="margin-top:30px; color:#ff4d4d">Pending Requests</h3>
+                <div class="table-wrapper"><table class="glass-table"><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Action</th></tr></thead><tbody id="damageTable"></tbody></table></div>
             </section>
 
             <section id="tab-add_item" style="display: none;">
                 <h2>Add New Item</h2>
-                <form id="addItemForm" style="max-width:500px;">
-                    <input type="text" id="itemName" placeholder="Item Name" required style="margin-bottom:10px;">
-                    <input type="text" id="itemSku" placeholder="SKU" style="margin-bottom:10px;">
-                    <select id="itemCategory" style="margin-bottom:10px;">
-                        <option>Packing</option><option>Insole</option><option>Sole</option>
-                        <option>Upper</option><option>Cut Insole</option><option>Cut Upper</option><option>Line Order</option>
-                    </select>
-                    <input type="text" id="itemSize" placeholder="Size" style="margin-bottom:10px;">
-                    <button type="submit" style="background:#00f2ff; color:black; font-weight:bold; padding:12px; width:100%; border:none; border-radius:50px;">Save Item</button>
+                <form id="addItemForm" class="internal-form">
+                    <input type="text" id="itemName" placeholder="Item Name" required>
+                    <input type="text" id="itemSku" placeholder="SKU">
+                    <select id="itemCategory" class="glass-input"><option>Packing</option><option>Insole</option><option>Sole</option><option>Upper</option><option>Cut Insole</option><option>Cut Upper</option><option>Line Order</option></select>
+                    <input type="text" id="itemSize" placeholder="Size">
+                    <button type="submit">Save</button>
                 </form>
             </section>
 
             <section id="tab-operations" style="display: none;">
-                <h2>Stock Operations</h2>
-                <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
-                    <div id="opDropdown" style="position:absolute; top:100%; width:100%; background:#1a1a2e; border:1px solid #444; display:none; max-height:200px; overflow-y:auto; z-index:100;"></div>
-                </div>
+                <h2>Operations</h2>
+                <div class="search-wrapper"><input type="text" id="opSearch" placeholder="Search item..."><div id="opDropdown" class="dropdown-results"></div></div>
                 <input type="hidden" id="selectedItemId">
-                <div style="display:flex; gap:10px;">
-                    <select id="opType"><option value="IN">IN (+)</option><option value="OUT">OUT (-)</option></select>
-                    <input type="number" id="opQty" placeholder="Qty">
-                </div>
-                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black; width:100%; padding:12px; border:none; border-radius:50px; font-weight:bold;">Update</button>
+                <div style="display:flex; gap:10px; margin-top:10px;"><select id="opType" class="glass-input"><option value="IN">IN</option><option value="OUT">OUT</option></select><input type="number" id="opQty" placeholder="Qty"></div>
+                <button onclick="performStockOp()" style="margin-top:15px;">Update</button>
             </section>
 
             <section id="tab-inventory" style="display: none;">
                 <h2>Inventory Summary</h2>
-                <div class="search-wrapper">
-                    <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item..." autocomplete="off">
-                </div>
-                <div id="inventoryListContainer">
-                    </div>
+                <div class="search-wrapper"><input type="text" id="inventorySearchInput" placeholder="Filter List..."></div>
+                <div class="table-wrapper"><table class="glass-table"><thead><tr><th>Category</th><th>Item</th><th>Total</th><th>Status</th></tr></thead><tbody id="inventoryTable"></tbody></table></div>
             </section>
 
             <section id="tab-reports" style="display: none;">
-                <h2>Top 5 Items per Category</h2>
-                <div id="top5ReportContainer">
-                    </div>
+                <h2>Reports</h2>
+                <div class="date-filters"><input type="date" id="dateFrom" class="glass-input"><input type="date" id="dateTo" class="glass-input"></div>
+                <div class="report-tabs"><button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button><button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button><button onclick="loadReport('ITEM')" class="tab-btn">History</button></div>
+                <div id="itemReportSearch" style="display:none" class="search-wrapper"><input type="text" id="repItemSearch" placeholder="Search..."><div id="repDropdown" class="dropdown-results"></div></div>
+                <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
 
         </main>
     </div>
+
     <script src="admin_script.js"></script>
 </body>
 </html>
