@@ -3,108 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin | Portal</title>
+    <title>PCU Admin | Dashboard</title>
+    
     <link rel="stylesheet" href="style.css">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* විශේෂ: Dashboard එක මුලින් හංගන්න */
-        #dashboard-interface { display: none; opacity: 0; transition: opacity 1s ease; }
-    </style>
 </head>
 <body>
 
     <div class="background"><div class="shape"></div><div class="shape"></div></div>
 
-    <div id="portal-view" class="portal-container">
-        <div class="portal-ring-outer"></div>
-        <div class="portal-ring-inner"></div>
-        
-        <div class="portal-core">
-            <h3>PCU</h3>
-            <p>ADMIN</p>
-        </div>
-
-        <div class="orbit-item item-1" onclick="enterPortal('overview')">
-            <i class="fas fa-chart-pie"></i>
-            <span>Overview</span>
-        </div>
-        <div class="orbit-item item-2" onclick="enterPortal('add_item')">
-            <i class="fas fa-plus-circle"></i>
-            <span>Add Item</span>
-        </div>
-        <div class="orbit-item item-3" onclick="enterPortal('inventory')">
-            <i class="fas fa-boxes"></i>
-            <span>Stock</span>
-        </div>
-        <div class="orbit-item item-4" onclick="enterPortal('reports')">
-            <i class="fas fa-file-contract"></i>
-            <span>Reports</span>
-        </div>
-        <div class="orbit-item item-5" onclick="enterPortal('operations')">
-            <i class="fas fa-dolly"></i>
-            <span>Ops</span>
-        </div>
-    </div>
-
-    <div id="dashboard-interface" class="dashboard-container">
+    <div class="dashboard-container">
         
         <nav class="glass-sidebar">
-            <div class="profile" onclick="exitPortal()" style="cursor: pointer;">
-                <i class="fas fa-arrow-left fa-2x" style="color: #00f2ff;"></i>
-                <h3 style="margin-top: 5px;">Back to Portal</h3>
+            <div class="profile">
+                <i class="fas fa-cubes fa-2x" style="color:#00f2ff;"></i>
+                <h3>INVENTORY</h3>
             </div>
             <ul>
-                <li onclick="switchTab('overview')" id="nav-overview"><i class="fas fa-chart-pie"></i> <span>Overview</span></li>
-                <li onclick="switchTab('add_item')" id="nav-add_item"><i class="fas fa-plus-circle"></i> <span>Add Item</span></li>
-                <li onclick="switchTab('operations')" id="nav-operations"><i class="fas fa-dolly"></i> <span>Operations</span></li>
-                <li onclick="switchTab('inventory')" id="nav-inventory"><i class="fas fa-boxes"></i> <span>Summary</span></li>
-                <li onclick="switchTab('reports')" id="nav-reports"><i class="fas fa-file-contract"></i> <span>Reports</span></li>
-                <li onclick="logout()" style="margin-top: auto; color: #ff4d4d;"><i class="fas fa-power-off"></i> <span>Logout</span></li>
+                <li onclick="switchTab('overview')" class="active">
+                    <i class="fas fa-th"></i> <span>Overview</span>
+                </li>
+                <li onclick="switchTab('add_item')">
+                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
+                </li>
+                <li onclick="switchTab('operations')">
+                    <i class="fas fa-exchange-alt"></i> <span>Operations</span>
+                </li>
+                <li onclick="switchTab('inventory')">
+                    <i class="fas fa-list"></i> <span>Stock List</span>
+                </li>
+                <li onclick="switchTab('reports')">
+                    <i class="fas fa-chart-bar"></i> <span>Reports</span>
+                </li>
+                <li onclick="logout()" style="margin-top:auto; color:#ff4d4d;">
+                    <i class="fas fa-power-off"></i> <span>Logout</span>
+                </li>
             </ul>
         </nav>
 
         <main class="glass-content">
+            
             <section id="tab-overview" class="active-section">
-                <h2>Stock Overview</h2>
-                <div id="stagnantBox" class="stagnant-container" style="display:none">
-                    <h3 style="color:#ff4d4d; font-size:16px;"><i class="fas fa-exclamation-circle"></i> Slow Moving Items</h3>
-                    <div id="stagnantItems" class="stagnant-list"></div>
+                <h2>Dashboard Overview</h2>
+
+                <div id="stagnantBox" class="alert-box" style="display:none;">
+                    <div class="alert-header">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <span>Slow Moving Items (> 2 Days In Stock)</span>
+                    </div>
+                    <div id="stagnantItems" class="alert-body">
+                        </div>
                 </div>
-                <div id="categoryGrid" class="cards-grid"><p>Loading...</p></div>
-                <h3 style="margin-top:30px; color:#ff4d4d">Pending Requests</h3>
-                <div class="table-wrapper"><table class="glass-table"><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Action</th></tr></thead><tbody id="damageTable"></tbody></table></div>
+
+                <h3 style="color:#aaa; font-size:14px; margin-bottom:15px; margin-top:20px;">Category Breakdown</h3>
+                <div id="categorySummaryGrid" class="summary-grid">
+                    <p style="color:#aaa">Loading Data...</p>
+                </div>
             </section>
 
             <section id="tab-add_item" style="display: none;">
                 <h2>Add New Item</h2>
                 <form id="addItemForm" class="internal-form">
-                    <input type="text" id="itemName" placeholder="Item Name" required>
-                    <input type="text" id="itemSku" placeholder="SKU">
-                    <select id="itemCategory" class="glass-input"><option>Packing</option><option>Insole</option><option>Sole</option><option>Upper</option><option>Cut Insole</option><option>Cut Upper</option><option>Line Order</option></select>
-                    <input type="text" id="itemSize" placeholder="Size">
-                    <button type="submit">Save</button>
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" id="itemName" required placeholder="Ex: Glue Bottle">
+                    </div>
+                    <div class="form-group">
+                        <label>SKU (Optional)</label>
+                        <input type="text" id="itemSku" placeholder="Ex: G-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="itemCategory" class="glass-input">
+                            <option>Packing</option>
+                            <option>Insole</option>
+                            <option>Sole</option>
+                            <option>Upper</option>
+                            <option>Cut Insole</option>
+                            <option>Cut Upper</option>
+                            <option>Line Order</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Size</label>
+                        <input type="text" id="itemSize" placeholder="Ex: 500ml">
+                    </div>
+                    <button type="submit">Save Item</button>
                 </form>
             </section>
 
             <section id="tab-operations" style="display: none;">
-                <h2>Operations</h2>
-                <div class="search-wrapper"><input type="text" id="opSearch" placeholder="Search item..."><div id="opDropdown" class="dropdown-results"></div></div>
+                <h2>Stock Operations</h2>
+                <div class="search-wrapper">
+                    <input type="text" id="opSearch" placeholder="Search item..." autocomplete="off">
+                    <div id="opDropdown" class="dropdown-results"></div>
+                </div>
                 <input type="hidden" id="selectedItemId">
-                <div style="display:flex; gap:10px; margin-top:10px;"><select id="opType" class="glass-input"><option value="IN">IN</option><option value="OUT">OUT</option></select><input type="number" id="opQty" placeholder="Qty"></div>
-                <button onclick="performStockOp()" style="margin-top:15px;">Update</button>
+                
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <select id="opType" class="glass-input">
+                        <option value="IN">IN (+)</option>
+                        <option value="OUT">OUT (-)</option>
+                    </select>
+                    <input type="number" id="opQty" placeholder="Qty" class="glass-input">
+                </div>
+                <button onclick="performStockOp()" style="margin-top:15px;">Update Stock</button>
             </section>
 
             <section id="tab-inventory" style="display: none;">
                 <h2>Inventory Summary</h2>
-                <div class="search-wrapper"><input type="text" id="inventorySearchInput" placeholder="Filter List..."></div>
-                <div class="table-wrapper"><table class="glass-table"><thead><tr><th>Category</th><th>Item</th><th>Total</th><th>Status</th></tr></thead><tbody id="inventoryTable"></tbody></table></div>
+                <div class="search-wrapper">
+                    <input type="text" id="inventorySearchInput" placeholder="Filter List...">
+                </div>
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Item</th>
+                                <th>Total Qty</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTable">
+                            </tbody>
+                    </table>
+                </div>
             </section>
 
             <section id="tab-reports" style="display: none;">
                 <h2>Reports</h2>
-                <div class="date-filters"><input type="date" id="dateFrom" class="glass-input"><input type="date" id="dateTo" class="glass-input"></div>
-                <div class="report-tabs"><button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button><button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button><button onclick="loadReport('ITEM')" class="tab-btn">History</button></div>
-                <div id="itemReportSearch" style="display:none" class="search-wrapper"><input type="text" id="repItemSearch" placeholder="Search..."><div id="repDropdown" class="dropdown-results"></div></div>
+                <div class="report-tabs">
+                    <button onclick="loadReport('NORMAL')" class="tab-btn active">Stock</button>
+                    <button onclick="loadReport('ADVANCE')" class="tab-btn">Logs</button>
+                </div>
                 <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
 
