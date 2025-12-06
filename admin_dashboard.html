@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin | Dashboard</title>
-    
+    <title>PCU Admin | Corrected</title>
     <link rel="stylesheet" href="style.css">
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* විශේෂ නිවැරදි කිරීම් */
+        .search-results-box {
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: #1a1a2e; border: 1px solid #444; border-top: none;
+            border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto;
+            z-index: 999; display: none;
+        }
+        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; color: white; }
+        .search-item:hover { background: #00f2ff; color: black; }
+
+        /* Report Filters */
+        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        .hidden-filter { display: none; }
+    </style>
 </head>
 <body>
 
@@ -16,29 +29,14 @@
     <div class="dashboard-container">
         
         <nav class="glass-sidebar">
-            <div class="profile">
-                <i class="fas fa-cubes fa-2x" style="color:#00f2ff;"></i>
-                <h3>INVENTORY</h3>
-            </div>
+            <div class="profile"><i class="fas fa-user-cog fa-3x" style="color:#00f2ff"></i><h3>ADMIN</h3></div>
             <ul>
-                <li onclick="switchTab('overview')" class="active">
-                    <i class="fas fa-th"></i> <span>Overview</span>
-                </li>
-                <li onclick="switchTab('add_item')">
-                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
-                </li>
-                <li onclick="switchTab('operations')">
-                    <i class="fas fa-exchange-alt"></i> <span>Operations</span>
-                </li>
-                <li onclick="switchTab('inventory')">
-                    <i class="fas fa-list"></i> <span>Stock List</span>
-                </li>
-                <li onclick="switchTab('reports')">
-                    <i class="fas fa-chart-bar"></i> <span>Reports</span>
-                </li>
-                <li onclick="logout()" style="margin-top:auto; color:#ff4d4d;">
-                    <i class="fas fa-power-off"></i> <span>Logout</span>
-                </li>
+                <li onclick="switchTab('overview')" class="active"><i class="fas fa-th"></i> <span>Overview</span></li>
+                <li onclick="switchTab('add_item')"><i class="fas fa-plus"></i> <span>Add Item</span></li>
+                <li onclick="switchTab('operations')"><i class="fas fa-exchange-alt"></i> <span>Operations</span></li>
+                <li onclick="switchTab('inventory')"><i class="fas fa-list"></i> <span>Stock List</span></li>
+                <li onclick="switchTab('reports')"><i class="fas fa-chart-line"></i> <span>Reports</span></li>
+                <li onclick="logout()" style="margin-top:auto; color:#ff4d4d;"><i class="fas fa-power-off"></i> <span>Logout</span></li>
             </ul>
         </nav>
 
@@ -46,104 +44,92 @@
             
             <section id="tab-overview" class="active-section">
                 <h2>Dashboard Overview</h2>
-
+                
                 <div id="stagnantBox" class="alert-box" style="display:none;">
-                    <div class="alert-header">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        <span>Slow Moving Items (> 2 Days In Stock)</span>
-                    </div>
-                    <div id="stagnantItems" class="alert-body">
-                        </div>
+                    <div class="alert-header"><i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)</div>
+                    <div id="stagnantItems" class="alert-body"></div>
                 </div>
 
-                <h3 style="color:#aaa; font-size:14px; margin-bottom:15px; margin-top:20px;">Category Breakdown</h3>
-                <div id="categorySummaryGrid" class="summary-grid">
-                    <p style="color:#aaa">Loading Data...</p>
+                <h3 style="color:#aaa; font-size:14px; margin:20px 0 10px 0;">Stock Levels</h3>
+                <div id="categorySummaryGrid" class="summary-grid"><p>Loading...</p></div>
+                
+                <h3 style="color:#ff4d4d; margin-top:30px;">Pending Issues</h3>
+                <div class="table-wrapper">
+                    <table class="glass-table"><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Action</th></tr></thead><tbody id="damageTable"></tbody></table>
                 </div>
             </section>
 
             <section id="tab-add_item" style="display: none;">
-                <h2>Add New Item</h2>
+                <h2>Add Item</h2>
                 <form id="addItemForm" class="internal-form">
-                    <div class="form-group">
-                        <label>Item Name</label>
-                        <input type="text" id="itemName" required placeholder="Ex: Glue Bottle">
-                    </div>
-                    <div class="form-group">
-                        <label>SKU (Optional)</label>
-                        <input type="text" id="itemSku" placeholder="Ex: G-001">
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="itemCategory" class="glass-input">
-                            <option>Packing</option>
-                            <option>Insole</option>
-                            <option>Sole</option>
-                            <option>Upper</option>
-                            <option>Cut Insole</option>
-                            <option>Cut Upper</option>
-                            <option>Line Order</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Size</label>
-                        <input type="text" id="itemSize" placeholder="Ex: 500ml">
-                    </div>
-                    <button type="submit">Save Item</button>
+                    <input type="text" id="itemName" placeholder="Item Name *" required>
+                    <input type="text" id="itemSku" placeholder="SKU">
+                    <select id="itemCategory">
+                        <option>Packing</option><option>Insole</option><option>Sole</option><option>Upper</option>
+                        <option>Cut Insole</option><option>Cut Upper</option><option>Line Order</option>
+                    </select>
+                    <input type="text" id="itemSize" placeholder="Size">
+                    <button type="submit">Save</button>
                 </form>
             </section>
 
             <section id="tab-operations" style="display: none;">
-                <h2>Stock Operations</h2>
-                <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Search item..." autocomplete="off">
-                    <div id="opDropdown" class="dropdown-results"></div>
-                </div>
+                <h2>Operations</h2>
+                <div class="search-wrapper" style="position:relative;">
+                    <input type="text" id="opSearch" placeholder="Type to search item..." autocomplete="off">
+                    <div id="opDropdown" class="search-results-box"></div> </div>
                 <input type="hidden" id="selectedItemId">
                 
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <select id="opType" class="glass-input">
-                        <option value="IN">IN (+)</option>
-                        <option value="OUT">OUT (-)</option>
-                    </select>
-                    <input type="number" id="opQty" placeholder="Qty" class="glass-input">
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <select id="opType"><option value="IN">IN (+)</option><option value="OUT">OUT (-)</option></select>
+                    <input type="number" id="opQty" placeholder="Qty">
                 </div>
                 <button onclick="performStockOp()" style="margin-top:15px;">Update Stock</button>
             </section>
 
             <section id="tab-inventory" style="display: none;">
-                <h2>Inventory Summary</h2>
+                <h2>Stock List</h2>
                 <div class="search-wrapper">
-                    <input type="text" id="inventorySearchInput" placeholder="Filter List...">
+                    <input type="text" id="inventorySearchInput" placeholder="Filter list..." autocomplete="off">
                 </div>
                 <div class="table-wrapper">
-                    <table class="glass-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Item</th>
-                                <th>Total Qty</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTable">
-                            </tbody>
-                    </table>
+                    <table class="glass-table"><thead><tr><th>Category</th><th>Item</th><th>Total Qty</th><th>Status</th></tr></thead><tbody id="inventoryTable"></tbody></table>
                 </div>
             </section>
 
             <section id="tab-reports" style="display: none;">
-                <h2>Reports</h2>
-                <div class="report-tabs">
-                    <button onclick="loadReport('NORMAL')" class="tab-btn active">Stock</button>
-                    <button onclick="loadReport('ADVANCE')" class="tab-btn">Logs</button>
+                <h2>Reports System</h2>
+                
+                <div class="filter-group" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                    <select id="reportFilterType" onchange="toggleDateInputs()" class="glass-input" style="width:auto;">
+                        <option value="ALL">All Time</option>
+                        <option value="RANGE">Date Range</option>
+                        <option value="MONTH">Monthly</option>
+                    </select>
+
+                    <div id="dateRangeInput" class="hidden-filter">
+                        <input type="date" id="dateStart" class="glass-input" style="width:auto;"> 
+                        <span style="color:#aaa">to</span> 
+                        <input type="date" id="dateEnd" class="glass-input" style="width:auto;">
+                    </div>
+                    
+                    <div id="monthInput" class="hidden-filter">
+                        <input type="month" id="monthPicker" class="glass-input" style="width:auto;">
+                    </div>
+
+                    <button onclick="generateReport()" class="btn-action" style="width:auto; margin-left:auto;">Generate Report</button>
                 </div>
+
+                <div class="report-tabs">
+                    <button onclick="viewReportType('NORMAL')" class="tab-btn active">Stock Summary</button>
+                    <button onclick="viewReportType('ADVANCE')" class="tab-btn">Transaction Log</button>
+                </div>
+
                 <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
 
         </main>
     </div>
-
     <script src="admin_script.js"></script>
 </body>
 </html>
