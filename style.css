@@ -1,116 +1,132 @@
-/* --- GLOBAL --- */
-:root { --bg-dark: #0f1015; --primary: #00f2ff; --glass-bg: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.1); }
-body { background: var(--bg-dark); color: white; font-family: 'Poppins', sans-serif; overflow: hidden; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; }
+/* --- 1. GLOBAL VARIABLES & RESET --- */
+:root {
+    --bg-dark: #0f1015;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --primary: #00f2ff;
+    --text-white: #ffffff;
+    --text-muted: #9ca3af;
+    --danger: #ff4d4d;
+    --warning: #ffb300;
+    --success: #00e676;
+    --radius: 15px;
+}
+
+*, *:before, *:after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-dark);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-white);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* Background */
 .background { position: fixed; inset: 0; z-index: -1; }
-.background .shape { position: absolute; width: 400px; height: 400px; border-radius: 50%; filter: blur(100px); opacity: 0.2; }
+.background .shape {
+    position: absolute; width: 400px; height: 400px; border-radius: 50%;
+    filter: blur(100px); opacity: 0.2;
+}
 .shape:first-child { background: var(--primary); top: -10%; left: -10%; }
 .shape:last-child { background: #ff0055; bottom: -10%; right: -10%; }
 
-/* --- PORTAL VIEW (THE CIRCLE) --- */
-.portal-container {
-    position: relative; width: 400px; height: 400px;
-    display: flex; justify-content: center; align-items: center;
-    transition: transform 1s ease-in, opacity 0.5s ease;
-}
-
-/* කැරකෙන රවුම් */
-.portal-ring-outer {
-    position: absolute; width: 100%; height: 100%; border-radius: 50%;
-    border: 2px dashed rgba(0, 242, 255, 0.3);
-    animation: spin 20s linear infinite;
-}
-.portal-ring-inner {
-    position: absolute; width: 70%; height: 70%; border-radius: 50%;
-    border: 2px solid rgba(0, 242, 255, 0.5);
-    box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
-    animation: spin 10s linear infinite reverse;
-}
-
-/* මැද කොටස */
-.portal-core {
-    position: absolute; width: 120px; height: 120px;
-    background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-    border-radius: 50%; border: 2px solid var(--primary);
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    box-shadow: 0 0 50px var(--primary); z-index: 10; cursor: default;
-}
-.portal-core h3 { margin: 0; font-size: 24px; color: var(--primary); }
-.portal-core p { margin: 0; font-size: 10px; letter-spacing: 2px; }
-
-/* වටේට තියෙන බටන් (Planets) */
-.orbit-item {
-    position: absolute; width: 80px; height: 80px;
-    background: rgba(20, 20, 30, 0.9); border: 1px solid var(--primary);
-    border-radius: 50%; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; cursor: pointer;
-    transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-}
-.orbit-item:hover { background: var(--primary); color: black; transform: scale(1.1); box-shadow: 0 0 30px var(--primary); }
-.orbit-item i { font-size: 20px; margin-bottom: 5px; }
-.orbit-item span { font-size: 10px; text-transform: uppercase; font-weight: bold; }
-
-/* අයිකන් පිහිටුවීම (Math for positioning) */
-.item-1 { transform: translate(0, -180px); }  /* Top */
-.item-2 { transform: translate(170px, -60px); } /* Right Top */
-.item-3 { transform: translate(105px, 145px); } /* Right Bottom */
-.item-4 { transform: translate(-105px, 145px); } /* Left Bottom */
-.item-5 { transform: translate(-170px, -60px); } /* Left Top */
-
-/* --- ANIMATIONS --- */
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-/* The Zoom Effect Class */
-.portal-zoom-active {
-    transform: scale(10); /* තිරය පුරාම ලොකු වෙනවා */
-    opacity: 0; /* ටිකෙන් ටික නොපෙනී යනවා */
-    pointer-events: none;
-}
-
-/* --- DASHBOARD STYLES (Your Standard UI) --- */
+/* Layout */
 .dashboard-container {
-    width: 95%; height: 90vh; max-width: 1600px;
-    background: rgba(15, 16, 21, 0.9); backdrop-filter: blur(20px);
-    border: 1px solid var(--border); border-radius: 20px;
-    display: flex; overflow: hidden;
+    display: flex; width: 95%; max-width: 1600px; height: 90vh;
+    background: rgba(15, 16, 21, 0.85); backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border); border-radius: 20px;
+    overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-.glass-sidebar { width: 250px; background: rgba(0,0,0,0.3); padding: 20px; display: flex; flex-direction: column; }
+
+/* Sidebar */
+.glass-sidebar {
+    width: 260px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--glass-border);
+    padding: 20px; display: flex; flex-direction: column; z-index: 10;
+}
+.glass-sidebar .profile { text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
+.glass-sidebar h3 { font-size: 16px; margin-top: 10px; color: var(--primary); letter-spacing: 2px; }
 .glass-sidebar ul { list-style: none; padding: 0; }
-.glass-sidebar li { padding: 12px; margin-bottom: 5px; cursor: pointer; color: #aaa; display: flex; align-items: center; border-radius: 10px; transition: 0.2s; }
-.glass-sidebar li:hover, .glass-sidebar li.active { background: rgba(0, 242, 255, 0.1); color: var(--primary); }
-.glass-sidebar li i { width: 30px; }
+.glass-sidebar li { padding: 12px 15px; border-radius: 10px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; font-size: 14px; margin-bottom: 5px; transition: 0.2s; }
+.glass-sidebar li i { width: 30px; font-size: 18px; }
+.glass-sidebar li:hover, .glass-sidebar li.active { background: rgba(0,242,255,0.1); color: var(--primary); }
 
-.glass-content { flex: 1; padding: 30px; overflow-y: auto; }
+/* Content */
+.glass-content { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
+h2 { font-size: 22px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 20px; }
+h3 { font-size: 16px; color: var(--text-muted); margin-bottom: 15px; font-weight: normal; }
 
-/* Cards, Tables, Inputs (Standard) */
-.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-.cat-card, .glass-card { background: var(--glass-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-.cat-count { font-size: 28px; font-weight: bold; }
-.table-wrapper { overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; margin-top: 15px; }
+/* --- SUMMARY GRID (Clean Stat Cards) --- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 15px; margin-bottom: 30px;
+}
+
+.summary-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    transition: 0.3s; height: 140px;
+}
+.summary-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(255,255,255,0.08); }
+
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.card-cat-title { font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+.card-icon { font-size: 24px; color: var(--text-muted); opacity: 0.5; }
+
+.card-body { display: flex; justify-content: space-between; align-items: flex-end; }
+.stat-main { text-align: left; }
+.stat-val { font-size: 36px; font-weight: 700; color: white; line-height: 1; }
+.stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+.stat-sub { text-align: right; }
+.sub-val { font-size: 18px; font-weight: 600; color: #00e676; display: block; }
+.sub-lbl { font-size: 11px; color: var(--text-muted); }
+
+/* --- STAGNANT ALERT --- */
+.alert-box {
+    background: rgba(255, 77, 77, 0.1); border: 1px solid var(--danger);
+    border-radius: var(--radius); padding: 15px; margin-bottom: 25px;
+}
+.alert-header { color: var(--danger); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.alert-body { display: flex; flex-wrap: wrap; gap: 8px; }
+.stagnant-tag {
+    background: var(--danger); color: white; padding: 4px 10px;
+    border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px;
+}
+
+/* Inputs & Tables */
+.search-wrapper { margin-bottom: 15px; position: relative; max-width: 400px; }
+input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white; outline: none; margin-bottom: 10px; font-size: 14px; }
+input:focus { border-color: var(--primary); }
+button { background: var(--primary); color: black; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
+.table-wrapper { overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--glass-border); }
 .glass-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-.glass-table th { padding: 15px; text-align: left; background: rgba(255,255,255,0.05); color: #aaa; }
-.glass-table td { padding: 15px; border-top: 1px solid var(--border); }
-.search-wrapper { position: relative; width: 100%; max-width: 400px; margin-bottom: 15px; }
-input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; outline: none; }
-button { background: var(--primary); color: black; font-weight: bold; cursor: pointer; }
-.dropdown-results { position: absolute; top: 100%; width: 100%; background: #151520; border: 1px solid #333; max-height: 200px; overflow-y: auto; display: none; z-index: 100; }
-.dropdown-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; }
+.glass-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; background: rgba(255,255,255,0.02); }
+.glass-table td { padding: 15px; border-top: 1px solid var(--glass-border); font-size: 14px; }
+
+/* Dropdown */
+.dropdown-results { position: absolute; top: 100%; left: 0; width: 100%; background: #15161b; border: 1px solid #333; max-height: 200px; overflow-y: auto; display: none; z-index: 100; border-radius: 8px; }
+.dropdown-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--glass-border); }
 .dropdown-item:hover { background: var(--primary); color: black; }
 
-/* --- MOBILE RESPONSIVE --- */
+/* Mobile */
 @media (max-width: 768px) {
-    /* Portal Mobile */
-    .portal-container { width: 300px; height: 300px; }
-    .orbit-item { width: 60px; height: 60px; }
-    .item-1 { transform: translate(0, -130px); }
-    .item-2 { transform: translate(120px, -40px); }
-    .item-3 { transform: translate(75px, 100px); }
-    .item-4 { transform: translate(-75px, 100px); }
-    .item-5 { transform: translate(-120px, -40px); }
-
-    /* Dashboard Mobile */
-    .dashboard-container { flex-direction: column; width: 100%; height: 100vh; border-radius: 0; }
-    .glass-sidebar { width: 100%; height: 60px; flex-direction: row; order: 2; padding: 5px; justify-content: space-around; background: #101010; z-index: 1000; }
-    .glass-sidebar .profile { display: none; } /* Back button hidden in nav, use hardware back or swipe */
+    .background { display: none; }
+    .dashboard-container { flex-direction: column; width: 100%; height: auto; min-height: 100vh; border-radius: 0; border: none; background: var(--bg-dark); }
+    .glass-sidebar { width: 100%; height: 60px; position: fixed; bottom: 0; left: 0; flex-direction: row; padding: 5px; background: #121318; border-top: 1px solid #333; border-right: none; z-index: 1000; justify-content: space-around; }
+    .glass-sidebar .profile { display: none; }
     .glass-sidebar li { flex-direction: column; padding: 5px; font-size: 10px; border: none; background: none !important; }
-    .glass-content { padding: 15px 15px 80px 15px; }
+    .glass-sidebar li i { font-size: 20px; width: auto; margin-bottom: 2px; }
+    .glass-content { padding: 15px 15px 85px 15px; height: auto; overflow: visible; }
+    .summary-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .summary-card { height: 130px; padding: 15px; }
+    .stat-val { font-size: 28px; }
+    .dropdown-results { position: fixed; top: auto; bottom: 65px; left: 10px; right: 10px; width: auto; }
 }
