@@ -4,20 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PCU Admin | Fluent Control</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="style.css">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-
     <div class="background"><div class="shape"></div><div class="shape"></div></div>
-
     <div class="dashboard-container">
         
-        <nav class="glass-sidebar">
+         <nav class="glass-sidebar">
             <div class="profile">
                 <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
                 <h3>Admin Panel</h3>
@@ -43,21 +38,18 @@
                 </li>
             </ul>
         </nav>
-
         <main class="glass-content">
             
-            <section id="tab-overview" class="active-section">
+             <section id="tab-overview" class="active-section">
                 <h2>Stock Overview</h2>
-                
-                <p id="lastActivityInfo" style="margin-bottom: 25px; padding: 10px; border-left: 5px solid var(--primary); background: rgba(0,0,0,0.3); font-size: 13px; color: var(--text-muted);"></p>
-
+                 
+                 <p id="lastActivityInfo" style="margin-bottom: 25px; padding: 10px; border-left: 5px solid var(--primary); background: rgba(0,0,0,0.3); font-size: 13px; color: var(--text-muted);"></p>
                 <div id="stagnantBox" class="stagnant-container">
                     <h3 style="color:white; font-size:16px; margin-bottom:10px;">
                         <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
                     </h3>
                     <div id="stagnantItems" class="stagnant-list"></div>
                 </div>
-
                 <div class="overview-grid">
                     <div>
                         <h3 style="margin-bottom: 15px; font-size: 14px; color: #aaa;">Inventory by Category</h3>
@@ -65,7 +57,6 @@
                             <p style="color: #aaa;">Loading Data...</p>
                         </div>
                     </div>
-
                     <div>
                         <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
                         <div class="table-wrapper">
@@ -85,9 +76,7 @@
                         </div>
                     </div>
                 </div>
-
             </section>
-
             <section id="tab-add_item" style="display: none;">
                 <h2>Add New Item</h2>
                 <form id="addItemForm" class="internal-form">
@@ -114,17 +103,15 @@
                     <button type="submit">Save to Database</button>
                 </form>
             </section>
-
             <section id="tab-operations" style="display: none;">
                 <h2>Stock Operations (In/Out)</h2>
-                
-                <label style="color:#00f2ff;">Select Item to Update:</label>
+                 
+                 <label style="color:#00f2ff;">Select Item to Update:</label>
                 <div class="search-wrapper">
                     <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
                     <div id="opDropdown" class="dropdown-results"></div>
                 </div>
                 <input type="hidden" id="selectedItemId">
-
                 <div style="display:flex; gap:10px; margin-top:20px;">
                     <select id="opType" class="glass-input" style="flex:1;">
                         <option value="IN">STOCK IN (+)</option>
@@ -132,17 +119,15 @@
                     </select>
                     <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
                 </div>
-                
-                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
+                 
+                 <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
             </section>
-
             <section id="tab-inventory" style="display: none;">
                 <h2>Inventory Summary (Total Qty)</h2>
-                
-                <div class="search-wrapper" style="margin-bottom: 20px;">
+                 
+                 <div class="search-wrapper" style="margin-bottom: 20px;">
                     <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name or Category..." autocomplete="off">
                 </div>
-
                 <div class="table-wrapper">
                     <table class="glass-table">
                         <thead>
@@ -153,63 +138,54 @@
                             </tr>
                         </thead>
                         <tbody id="inventoryTable">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </section>
-
             <section id="tab-reports" style="display: none;">
                 <h2>Reports System</h2>
-                
-                <div class="date-filters">
+                 
+                 <div class="date-filters">
                     <label>From: <input type="date" id="dateFrom" class="glass-input" style="width:auto; display:inline-block;"></label>
                     <label>To: <input type="date" id="dateTo" class="glass-input" style="width:auto; display:inline-block;"></label>
                 </div>
-
                 <div class="report-tabs">
                     <button onclick="loadReport('NORMAL', event)" class="tab-btn active"><i class="fas fa-list-alt"></i> Normal</button>
                     <button onclick="loadReport('ADVANCE', event)" class="tab-btn"><i class="fas fa-exchange-alt"></i> Advance</button>
                     <button onclick="loadReport('ITEM', event)" class="tab-btn"><i class="fas fa-chart-line"></i> History</button>
                 </div>
-
                 <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
                     <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
                     <div id="repDropdown" class="dropdown-results"></div>
                 </div>
-
                 <div id="chartContainer" style="height: 300px; margin-bottom: 30px; display:none;">
                     <canvas id="reportChart"></canvas>
                 </div>
-                
-                <div id="kpiGrid" class="cards-grid" style="display:none; margin-bottom: 20px;">
+                 
+                 <div id="kpiGrid" class="cards-grid" style="display:none; margin-bottom: 20px;">
                     <div class="glass-card"><i class="fas fa-sign-in-alt"></i><h3 id="kpiIn">0</h3><p>Total Stock IN</p></div>
                     <div class="glass-card"><i class="fas fa-sign-out-alt"></i><h3 id="kpiOut">0</h3><p>Total Stock OUT</p></div>
                     <div class="glass-card"><i class="fas fa-balance-scale"></i><h3 id="kpiNet">0</h3><p>Net Change</p></div>
                 </div>
-
-
                 <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
             </section>
-
         </main>
     </div>
-
     <div id="damageModal" class="modal-overlay" style="display:none;">
         <div class="modal-content glass-card">
             <span class="modal-close" onclick="hideModal()">&times;</span>
             <h3 id="modalTitle" style="color:var(--primary); margin-bottom:15px;">Damage Report Details</h3>
             
-            <div class="modal-info-grid">
+             <div class="modal-info-grid">
                 <div><strong>Reported Date:</strong> <span id="modalDate"></span></div>
                 <div><strong>Reported By:</strong> <span id="modalBy"></span></div>
                 <div><strong>Quantity:</strong> <span id="modalQty" style="font-weight:bold; color:#ffb300;"></span></div>
             </div>
             
-            <h4 style="margin-top:20px; border-bottom: 1px solid #333; padding-bottom: 5px; color:#ff4d4d;">
+             <h4 style="margin-top:20px; border-bottom: 1px solid #333; padding-bottom: 5px; color:#ff4d4d;">
                 <i class="fas fa-exclamation-triangle"></i> Reason / Note:
             </h4>
             <p id="modalNote" style="white-space: pre-wrap; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;"></p>
-
             <div class="modal-actions">
                 <button id="modalReplaceBtn" class="btn-action btn-approve" style="width:100%;">Replace Stock</button>
                 <button id="modalRemoveBtn" class="btn-action btn-reject" style="width:100%; margin-top:10px;">Remove Item</button>
@@ -217,6 +193,307 @@
         </div>
     </div>
 
-    <script src="admin_script.js"></script>
+    <!-- Modified script - implements:
+         - smaller Inventory-by-Category cards
+         - slow-moving items warning + rotating single-item display with 2s refresh & LED bar
+         - Reports: show main categories & totals; click to expand subcategories
+         - fixed date filter handling for reports (inclusive)
+         -->
+    <script>
+    (function(window, document){
+      'use strict';
+
+      // -------------------- Helpers & Data --------------------
+      function getInventory(){
+        if(window.inventoryData && Array.isArray(window.inventoryData)) return window.inventoryData;
+        try{
+          const raw = localStorage.getItem('inventory');
+          if(raw) return JSON.parse(raw);
+        }catch(e){/* ignore */}
+        // safe sample so UI shows something if no data present
+        return [
+          { id: 'I001', name: 'Kelzi 2025', category: 'Packing', subcategory: 'Box Small', qty: 120, lastOut: null, lastIn: '2025-11-30' },
+          { id: 'I002', name: 'Insole A', category: 'Insole', subcategory: 'Foam', qty: 30, lastOut: '2025-12-05', lastIn: '2025-12-01' },
+          { id: 'I003', name: 'Sole X', category: 'Sole', subcategory: 'Rubber', qty: 0, lastOut: '2025-11-01', lastIn: '2025-11-01' }
+        ];
+      }
+
+      function safeParseDate(value){
+        if(!value) return null;
+        // normalize date-only to local midnight
+        const d = new Date(value + 'T00:00:00');
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      function daysBetween(a,b){
+        const ms = Math.abs(b.getTime() - a.getTime());
+        return Math.floor(ms / (1000*60*60*24));
+      }
+
+      // -------------------- Inventory by Category (small cards) --------------------
+      function renderCategoryGrid(){
+        const grid = document.getElementById('categoryGrid');
+        if(!grid) return;
+        const inventory = getInventory();
+
+        // compute totals by main category
+        const totals = {};
+        inventory.forEach(it => {
+          const cat = it.category || 'Uncategorized';
+          totals[cat] = (totals[cat] || 0) + (Number(it.qty) || 0);
+        });
+
+        grid.innerHTML = '';
+        // create compact cards; keep them small and glass-like
+        Object.keys(totals).sort().forEach(cat => {
+          const card = document.createElement('div');
+          card.className = 'glass-card small-card';
+          card.style.padding = '8px 10px';
+          card.style.minWidth = '110px';
+          card.style.maxWidth = '150px';
+          card.style.margin = '6px';
+          card.style.borderRadius = '10px';
+          card.style.display = 'inline-block';
+          card.style.verticalAlign = 'top';
+
+          const title = document.createElement('div');
+          title.style.fontSize = '12px';
+          title.style.color = '#ddd';
+          title.style.marginBottom = '6px';
+          title.textContent = cat;
+
+          const qty = document.createElement('div');
+          qty.style.fontSize = '16px';
+          qty.style.fontWeight = '700';
+          qty.textContent = totals[cat];
+
+          card.appendChild(title);
+          card.appendChild(qty);
+          grid.appendChild(card);
+        });
+      }
+
+      // -------------------- Slow-moving items (rotating single item, LED bar) --------------------
+      let stagnantInterval = null;
+      function renderStagnantItems(){
+        const container = document.getElementById('stagnantItems');
+        const infoBox = document.getElementById('lastActivityInfo');
+        if(!container || !infoBox) return;
+
+        const inventory = getInventory();
+        const today = new Date();
+
+        // define slow-moving: no lastOut OR lastOut older than 2 days
+        const slow = inventory.filter(it => {
+          if(!it) return false;
+          if(!it.lastOut) return true;
+          const d = new Date(it.lastOut);
+          if(isNaN(d.getTime())) return true;
+          return daysBetween(d, today) > 2;
+        });
+
+        if(slow.length === 0){
+          infoBox.innerHTML = '<strong style="color:#8ef">Status:</strong> All items have stock-out activity within 2 days.';
+          container.innerHTML = '<p style="color:#aaa; margin:8px 0;">No slow-moving items.</p>';
+          if(stagnantInterval){ clearInterval(stagnantInterval); stagnantInterval = null; }
+          return;
+        }
+
+        infoBox.innerHTML = '<strong style="color:#ffb300">Warning:</strong> ' + slow.length + ' item(s) have no stock-OUT within the last 2 days.';
+
+        // show one at a time, rotate every 2s with fill animation
+        let i = 0;
+        function showOne(){
+          const it = slow[i % slow.length];
+          container.innerHTML = '';
+
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.flexDirection = 'column';
+          wrapper.style.gap = '8px';
+
+          const title = document.createElement('div');
+          title.innerHTML = '<strong style="font-size:14px">' + (it.name || 'Unnamed') + '</strong> <span style="opacity:0.8; margin-left:8px">(' + (it.id || '-') + ')</span> <div style="font-size:12px; opacity:0.8; margin-top:4px">Category: ' + (it.category || 'N/A') + ' • Qty: <strong style="color:#ffb300">' + (it.qty||0) + '</strong></div>';
+
+          const ledWrap = document.createElement('div');
+          ledWrap.style.width = '100%';
+          ledWrap.style.height = '8px';
+          ledWrap.style.borderRadius = '6px';
+          ledWrap.style.background = 'rgba(255,255,255,0.06)';
+          ledWrap.style.overflow = 'hidden';
+
+          const bar = document.createElement('div');
+          bar.style.height = '100%';
+          bar.style.width = '0%';
+          bar.style.transition = 'width 1.9s linear';
+          bar.style.background = 'linear-gradient(90deg,#ffb300,#ff4d4d)';
+
+          ledWrap.appendChild(bar);
+
+          wrapper.appendChild(title);
+          wrapper.appendChild(ledWrap);
+          container.appendChild(wrapper);
+
+          // trigger fill slightly after insertion
+          setTimeout(function(){ bar.style.width = '100%'; }, 30);
+
+          i++;
+        }
+
+        if(stagnantInterval) clearInterval(stagnantInterval);
+        showOne();
+        stagnantInterval = setInterval(showOne, 2000);
+      }
+
+      // -------------------- Reports: main categories + expand subcategories --------------------
+      // Exposed globally because HTML calls loadReport in onclick handlers
+      window.loadReport = function(type, evt){
+        const inventory = getInventory();
+        const out = document.getElementById('reportOutput');
+        if(!out) return;
+
+        const fromInput = document.getElementById('dateFrom');
+        const toInput = document.getElementById('dateTo');
+        const from = safeParseDate(fromInput ? fromInput.value : null);
+        const to = safeParseDate(toInput ? toInput.value : null);
+
+        // If only 'to' is provided, interpret as up to that day; set end-of-day for inclusive comparison
+        let toInclusive = null;
+        if(to) { toInclusive = new Date(to.getTime()); toInclusive.setHours(23,59,59,999); }
+
+        // Helper: check if item has any activity (lastIn/lastOut) within range. If no from/to, include all items
+        function dateInRange(item){
+          if(!from && !to) return true;
+          const candidates = [];
+          if(item.lastIn) candidates.push(new Date(item.lastIn));
+          if(item.lastOut) candidates.push(new Date(item.lastOut));
+          if(candidates.length === 0) return false;
+          return candidates.some(function(d){
+            if(isNaN(d.getTime())) return false;
+            if(from && d < from) return false;
+            if(toInclusive && d > toInclusive) return false;
+            return true;
+          });
+        }
+
+        // Build report data: group by main category, then subcategory
+        const report = {};
+        inventory.forEach(function(it){
+          if(!dateInRange(it)) return; // skip if not in selected date range
+          const cat = it.category || 'Uncategorized';
+          const sub = it.subcategory || 'Other';
+          report[cat] = report[cat] || { total:0, subs: {} };
+          report[cat].total += Number(it.qty) || 0;
+          report[cat].subs[sub] = (report[cat].subs[sub] || 0) + (Number(it.qty) || 0);
+        });
+
+        // Render main categories only with totals; clickable to expand subcategories
+        out.innerHTML = '';
+        const table = document.createElement('table');
+        table.className = 'glass-table';
+        table.style.width = '100%';
+        table.innerHTML = '\
+          <thead>\
+            <tr><th style="width:60%">Category</th><th style="width:30%">Total Qty</th><th style="width:10%"></th></tr>\
+          </thead>';
+        const tbody = document.createElement('tbody');
+
+        Object.keys(report).sort().forEach(function(cat){
+          const row = document.createElement('tr');
+          row.style.cursor = 'pointer';
+          row.innerHTML = '<td><strong>' + cat + '</strong></td><td>' + report[cat].total + '</td><td style="text-align:right">▶</td>';
+
+          // container row for subcategories (hidden by default)
+          const subRow = document.createElement('tr');
+          const subCell = document.createElement('td');
+          subCell.colSpan = 3;
+          subCell.style.padding = '0';
+          subCell.style.display = 'none';
+          const inner = document.createElement('div');
+          inner.style.padding = '8px 12px';
+          inner.style.background = 'rgba(255,255,255,0.02)';
+          inner.style.borderTop = '1px solid rgba(255,255,255,0.03)';
+
+          // build subcategory list
+          const list = document.createElement('div');
+          list.style.display = 'flex';
+          list.style.flexWrap = 'wrap';
+          list.style.gap = '8px';
+
+          Object.keys(report[cat].subs).sort().forEach(function(sub){
+            const pill = document.createElement('div');
+            pill.className = 'glass-card small-card';
+            pill.style.padding = '6px 8px';
+            pill.style.minWidth = '110px';
+            pill.style.display = 'inline-block';
+            pill.innerHTML = '<div style="font-size:12px; color:#ddd">' + sub + '</div><div style="font-weight:700; font-size:14px">' + report[cat].subs[sub] + '</div>';
+            list.appendChild(pill);
+          });
+
+          if(list.children.length === 0){
+            inner.innerHTML = '<div style="color:#aaa; padding:8px 0">No subcategories for this category in the selected range.</div>';
+          } else {
+            inner.appendChild(list);
+          }
+
+          subCell.appendChild(inner);
+          subRow.appendChild(subCell);
+
+          // toggle on click
+          row.addEventListener('click', function(){
+            const visible = subCell.style.display === '';
+            // collapse any open ones first
+            Array.from(tbody.querySelectorAll('tr')).forEach(function(r){
+              if(r !== subRow && r.nextSibling === subRow) {
+                r.nextSibling.firstChild.style.display = 'none';
+                r.lastChild.innerHTML = '▶';
+              }
+            });
+
+            subCell.style.display = visible ? 'none' : '';
+            row.lastChild.innerHTML = visible ? '▶' : '▼';
+          });
+
+          tbody.appendChild(row);
+          tbody.appendChild(subRow);
+        });
+
+        table.appendChild(tbody);
+        out.appendChild(table);
+      };
+
+      // -------------------- Initialization --------------------
+      function init(){
+        renderCategoryGrid();
+        renderStagnantItems();
+
+        // If reports tab is active on load, trigger initial report render
+        const activeReportBtn = document.querySelector('#tab-reports .tab-btn.active');
+        if(activeReportBtn){
+          // ensure loadReport is called with NORMAL by default
+          setTimeout(function(){ window.loadReport('NORMAL'); }, 50);
+        }
+
+        // Re-render category grid when inventory changes in localStorage (simple watch)
+        window.addEventListener('storage', function(e){
+          if(e.key === 'inventory'){
+            renderCategoryGrid();
+            renderStagnantItems();
+          }
+        });
+      }
+
+      // expose a manual refresh for external scripts if needed
+      window._adminHelpers = {
+        renderCategoryGrid: renderCategoryGrid,
+        renderStagnantItems: renderStagnantItems,
+        loadReport: window.loadReport
+      };
+
+      document.addEventListener('DOMContentLoaded', init);
+
+    })(window, document);
+    </script>
+
 </body>
 </html>
