@@ -7,6 +7,19 @@ let globalLogs = [];
 let selectedRepItemName = '';
 let chartInstance = null; // Chart.js instance
 
+// --- additional globals for stagnant rotation ---
+let stagnantRotateInterval = null;
+
+// helper: produce yyyy-mm-dd for consistent date-only comparisons
+function dateOnly(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 // --- 1. INITIALIZATION ---
 window.onload = function() {
     const token = localStorage.getItem('token');
@@ -29,13 +42,10 @@ window.onload = function() {
  */
 function cleanString(str) {
     if (!str) return '';
-    // 1. Double quotes (") and Single quotes (') ඉවත් කිරීම.
     let cleaned = String(str).replace(/"/g, '').replace(/'/g, ''); 
-    // 2. Line breaks සහ tabs ඉවත් කිරීම (onclick attribute එක කැඩීම වැලැක්වීමට).
     cleaned = cleaned.replace(/(\r\n|\n|\r|\t)/gm, ' '); 
     return cleaned.trim();
 }
-
 
 function getHeaders() {
     return { 
@@ -51,7 +61,8 @@ function logout() {
 
 function switchTab(id) {
     document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-    document.getElementById(`tab-${id}`).style.display = 'block';
+    const target = document.getElementById(`tab-${id}`);
+    if (target) target.style.display = 'block';
     
     document.querySelectorAll('.glass-sidebar li').forEach(li => li.classList.remove('active'));
     const activeBtn = document.querySelector(`li[onclick="switchTab('${id}')"]`);
@@ -102,7 +113,7 @@ function updateLastActivity() {
 
 
 function updateDashboardUI(inv, dmg) {
-    // A. CATEGORY BREAKDOWN CARDS
+    // A. CATEGORY BREAKDOWN CARDS (group by category)
     const catGrid = document.getElementById('categoryGrid');
     const categories = {};
     
@@ -111,56 +122,119 @@ function updateDashboardUI(inv, dmg) {
         categories[i.category] += i.qty;
     });
 
+    // compute number of distinct item names per category
+    const itemsPerCategory = {};
+    inv.forEach(i => {
+        if (!itemsPerCategory[i.category]) itemsPerCategory[i.category] = new Set();
+        itemsPerCategory[i.category].add(i.item_name);
+    });
+
     catGrid.innerHTML = '';
     for (const [catName, totalQty] of Object.entries(categories)) {
+        const distinctCount = itemsPerCategory[catName] ? itemsPerCategory[catName].size : 0;
         catGrid.innerHTML += `
-            <div class="cat-card" onclick="switchTab('inventory'); filterInventoryByCategory('${catName}')">
-                <div class="cat-title">${catName}</div>
-                <div class="cat-count">${totalQty}</div>
+            <div class="cat-card" onclick="switchTab('inventory'); filterInventoryByCategory('${catName.replace(/'/g,"\\'")}')">
+                <div class="cat-title" title="${catName}">${catName}</div>
+                <div class="cat-meta">
+                    <div class="cat-count">${totalQty}</div>
+                    <div class="cat-items">${distinctCount} item${distinctCount !== 1 ? 's' : ''}</div>
+                </div>
             </div>`;
     }
 
-    // B. STAGNANT ITEMS ALERT (> 2 Days)
+    // B. STAGNANT ITEMS ALERT (> 2 Days WITHOUT 'OUT' activity)
     const stagnantBox = document.getElementById('stagnantBox');
     const stagnantList = document.getElementById('stagnantItems');
-    stagnantList.innerHTML = '';
-    const now = new Date();
-    let hasStagnant = false;
+    // remove previous warning text (we'll re-add if needed)
+    const oldWarning = stagnantBox.querySelector('.stagnant-warning');
+    if (oldWarning) oldWarning.remove();
 
-    inv.forEach(i => {
-        const lastUpdate = new Date(i.last_updated_at);
-        const diffDays = Math.ceil(Math.abs(now - lastUpdate) / (1000 * 60 * 60 * 24)); 
-        
-        if (diffDays > 2 && i.qty > 0) {
-            hasStagnant = true;
-            stagnantList.innerHTML += `
-                <div class="stagnant-badge" title="Last Active: ${diffDays} days ago">
-                    <i class="fas fa-clock"></i> ${i.item_name} (${i.qty})
-                </div>`;
+    stagnantList.innerHTML = '';
+
+    const now = new Date();
+    const twoDaysAgoISO = dateOnly(new Date(now.getTime() - (2 * 24 * 60 * 60 * 1000)));
+
+    // Build a map of last OUT timestamp per item from globalLogs
+    const lastOutMap = {};
+    globalLogs.forEach(l => {
+        if (l.action_type === 'OUT') {
+            const key = l.item_name_snapshot;
+            const ts = new Date(l.timestamp);
+            if (!lastOutMap[key] || new Date(lastOutMap[key]) < ts) {
+                lastOutMap[key] = ts.toISOString();
+            }
         }
     });
-    stagnantBox.style.display = hasStagnant ? 'block' : 'none';
+
+    const stagnantItems = [];
+
+    inv.forEach(i => {
+        if (i.qty <= 0) return;
+        const lastOutISO = lastOutMap[i.item_name];
+        let isStagnant = false;
+        if (!lastOutISO) {
+            const lastUpd = i.last_updated_at ? dateOnly(i.last_updated_at) : null;
+            if (!lastUpd || lastUpd <= twoDaysAgoISO) isStagnant = true;
+        } else {
+            if (dateOnly(lastOutISO) <= twoDaysAgoISO) isStagnant = true;
+        }
+
+        if (isStagnant) {
+            stagnantItems.push({
+                name: i.item_name,
+                category: i.category,
+                qty: i.qty,
+                lastOut: lastOutISO || i.last_updated_at || 'N/A'
+            });
+        }
+    });
+
+    if (stagnantItems.length === 0) {
+        stagnantBox.style.display = 'none';
+        if (stagnantRotateInterval) { clearInterval(stagnantRotateInterval); stagnantRotateInterval = null; }
+    } else {
+        stagnantBox.style.display = 'block';
+
+        const warningHtml = `<div class="stagnant-warning"><i class="fas fa-exclamation-circle"></i> Warning: No STOCK OUT recorded in the last 2 days for ${stagnantItems.length} item(s). Showing one at a time.</div>`;
+        stagnantBox.insertAdjacentHTML('afterbegin', warningHtml);
+
+        const badges = stagnantItems.map(si => {
+            const title = `Category: ${si.category} • Last OUT: ${dateOnly(si.lastOut)}`;
+            return `<div class="stagnant-badge" title="${title}"><i class="fas fa-clock"></i> ${si.name} (${si.qty})</div>`;
+        });
+
+        let index = 0;
+        stagnantList.innerHTML = badges[index];
+
+        if (stagnantRotateInterval) clearInterval(stagnantRotateInterval);
+        stagnantRotateInterval = setInterval(() => {
+            index = (index + 1) % badges.length;
+            stagnantList.style.opacity = 0;
+            setTimeout(() => {
+                stagnantList.innerHTML = badges[index];
+                stagnantList.style.opacity = 1;
+            }, 220);
+        }, 2000);
+    }
 
     // C. PENDING DAMAGE TABLE
     const dTable = document.getElementById('damageTable');
     dTable.innerHTML = '';
-    if(dmg.length === 0) {
+    if (dmg.length === 0) {
         dTable.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">✅ No Pending Issues</td></tr>';
     } else {
         dmg.forEach(d => {
             const typeBadge = d.damage_type === 'DAMAGE' ? '<span style="color:#ff4d4d;font-weight:bold">DAMAGE</span>' : '<span style="color:#ffb300;font-weight:bold">SHORTAGE</span>';
-            
-            // ⭐️ Note එක safe කිරීමට cleanString භාවිත කරන්න
             const safeNote = cleanString(d.note || 'No note provided.');
 
             dTable.innerHTML += `
                 <tr onclick="showDamageDetails(${d.id}, 
-                                  '${d.item_name}', 
-                                  '${d.category}', 
+                                  '${d.item_name.replace(/'/g,"\\'")}', 
+                                  '${d.category.replace(/'/g,"\\'")}', 
                                   ${d.damage_qty}, 
-                                  '${d.reported_by}', 
+                                  '${(d.reported_by || '').replace(/'/g,"\\'")}', 
                                   '${d.reported_at}', 
-                                  '${safeNote}')">
+                                  '${safeNote.replace(/'/g,"\\'")}')">
                     <td>${new Date(d.reported_at).toLocaleDateString()}</td>
                     <td>${d.item_name} <br><small>${d.category}</small></td>
                     <td>${typeBadge}</td>
@@ -229,7 +303,6 @@ function renderInventorySummary(data) {
         else if (i.total < 10) status = '<span style="color:#ffb300; font-weight:bold">Low Stock</span>';
         else status = '<span style="color:#00e676; font-weight:bold">Good</span>';
         
-        // Size column removed from summary table
         tbody.innerHTML += `
             <tr>
                 <td>${i.category}</td>
@@ -327,53 +400,56 @@ function loadReport(type, event) {
     const kpiGrid = document.getElementById('kpiGrid');
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
-    
+
+    // Utility: inclusive date range check for timestamps (date-only)
+    const inRange = (timestamp) => {
+        if(!dateFrom && !dateTo) return true;
+        const d = dateOnly(timestamp); // yyyy-mm-dd
+        if (dateFrom && d < dateFrom) return false;
+        if (dateTo && d > dateTo) return false;
+        return true;
+    };
+
     chartContainer.style.display = 'none';
     kpiGrid.style.display = 'none';
-    
+
     // Toggle Active Buttons
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     if(event) event.target.classList.add('active');
-    else document.querySelector(`[onclick="loadReport('${type}', event)"]`).classList.add('active');
-
-    const isInRange = (timestamp) => {
-        if(!dateFrom && !dateTo) return true;
-        const date = new Date(timestamp).toISOString().split('T')[0];
-        if(dateFrom && date < dateFrom) return false;
-        if(dateTo && date > dateTo) return false;
-        return true;
-    };
+    else {
+        const fallback = document.querySelector(`[onclick="loadReport('${type}', event)"]`);
+        if (fallback) fallback.classList.add('active');
+    }
 
     document.getElementById('itemReportSearch').style.display = (type === 'ITEM') ? 'block' : 'none';
 
     if (type === 'NORMAL') {
-        const grouped = {};
-        globalInventory.forEach(i => { if(!grouped[i.category]) grouped[i.category]=[]; grouped[i.category].push(i); });
-        
-        chartContainer.style.display = 'block';
-        const chartData = {
-            labels: Object.keys(grouped),
-            datasets: [{
-                data: Object.keys(grouped).map(cat => grouped[cat].reduce((sum, item) => sum + item.qty, 0)),
-                backgroundColor: ['#00f2ff', '#ffb300', '#00e676', '#ff4d4d', '#1845ad', '#ff0055', '#AAAAAA'],
-            }]
-        };
-        renderChart('pie', chartData, 'Inventory Breakdown by Category');
+        const catTotals = {};
+        globalInventory.forEach(i => {
+            if ( (dateFrom || dateTo) && i.last_updated_at) {
+                if (!inRange(i.last_updated_at)) return;
+            }
+            if (!catTotals[i.category]) catTotals[i.category] = 0;
+            catTotals[i.category] += i.qty;
+        });
 
-        let html = '';
-        for(const [cat, items] of Object.entries(grouped)) {
-            html += `<h4 style="color:#00f2ff; margin-top:15px; border-bottom:1px solid #333">${cat} (Total: ${items.reduce((sum, item) => sum + item.qty, 0)})</h4><table class="glass-table"><tr><th>Item</th><th>Qty</th></tr>`;
-            items.forEach(x => html += `<tr><td>${x.item_name}</td><td>${x.qty}</td></tr>`);
-            html += `</table>`;
+        let html = `<table class="glass-table"><thead><tr><th>Category</th><th>Total Qty</th></tr></thead><tbody>`;
+        if (Object.keys(catTotals).length === 0) {
+            html += `<tr><td colspan="2" style="text-align:center; padding:18px;">No categories found for selected range</td></tr>`;
+        } else {
+            for (const [cat, total] of Object.entries(catTotals)) {
+                html += `<tr style="cursor:pointer" onclick="loadCategoryItems('${cat.replace(/'/g,"\\'")}')"><td style="font-weight:600">${cat}</td><td style="font-weight:700">${total}</td></tr>`;
+            }
         }
+        html += `</tbody></table>`;
         output.innerHTML = html;
-
+        chartContainer.style.display = 'none';
     } else if (type === 'ADVANCE') {
-        const filtered = globalLogs.filter(l => isInRange(l.timestamp));
-        
+        const filtered = globalLogs.filter(l => inRange(l.timestamp));
+
         kpiGrid.style.display = 'grid';
         chartContainer.style.display = 'block';
-        
+
         const totalIn = filtered.filter(l => l.action_type === 'IN').reduce((sum, l) => sum + l.qty_changed, 0);
         const totalOut = filtered.filter(l => l.action_type === 'OUT').reduce((sum, l) => sum + l.qty_changed, 0);
         const netChange = totalIn - totalOut;
@@ -383,9 +459,8 @@ function loadReport(type, event) {
         document.getElementById('kpiNet').innerText = netChange;
         document.getElementById('kpiNet').style.color = netChange >= 0 ? '#00e676' : '#ff4d4d';
 
-
         const dailyData = filtered.reduce((acc, log) => {
-            const date = new Date(log.timestamp).toLocaleDateString('en-US');
+            const date = dateOnly(log.timestamp);
             if (!acc[date]) acc[date] = { IN: 0, OUT: 0 };
             acc[date][log.action_type] += log.qty_changed;
             return acc;
@@ -420,8 +495,8 @@ function loadReport(type, event) {
 
     } else if (type === 'ITEM') {
         if(!selectedRepItemName) { output.innerHTML = '<p style="text-align:center">Please search and select an item above.</p>'; return; }
-        const filtered = globalLogs.filter(l => l.item_name_snapshot === selectedRepItemName && isInRange(l.timestamp));
-        
+        const filtered = globalLogs.filter(l => l.item_name_snapshot === selectedRepItemName && inRange(l.timestamp));
+
         chartContainer.style.display = 'block';
         const historyData = filtered.map(l => ({ 
             x: new Date(l.timestamp).toLocaleString(), 
@@ -438,7 +513,7 @@ function loadReport(type, event) {
             }]
         };
         renderChart('bar', chartData, `History: ${selectedRepItemName}`);
-        
+
         let html = `<h3>History: ${selectedRepItemName}</h3><table class="glass-table"><tr><th>Date/Time</th><th>Action</th><th>Qty</th><th>User</th></tr>`;
         filtered.forEach(l => { html += `<tr><td>${new Date(l.timestamp).toLocaleString()}</td><td>${l.action_type}</td><td>${l.qty_changed}</td><td>${l.user_name}</td></tr>`; });
         output.innerHTML = html + '</table>';
@@ -478,9 +553,13 @@ document.getElementById('addItemForm').addEventListener('submit', async (e) => {
         category: document.getElementById('itemCategory').value,
         size: '' 
     };
-    const res = await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
-    if(res.ok) { alert("✅ Item Added!"); document.getElementById('addItemForm').reset(); fetchData(); } 
-    else { const j=await res.json(); alert("⚠️ " + j.error); }
+    try {
+        const res = await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if(res.ok) { alert("✅ Item Added!"); document.getElementById('addItemForm').reset(); fetchData(); } 
+        else { const j=await res.json(); alert("⚠️ " + j.error); }
+    } catch (err) {
+        alert("Server Error");
+    }
 });
 
 async function resolve(id, decision) {
@@ -501,7 +580,6 @@ function showDamageDetails(id, item, category, qty, by, date, note) {
     document.getElementById('modalDate').innerText = new Date(date).toLocaleString();
     document.getElementById('modalQty').innerText = qty;
     document.getElementById('modalBy').innerText = by;
-    // ⭐️ පිරිසිදු කළ Note එක මෙහි පෙන්වයි
     document.getElementById('modalNote').innerText = note; 
     
     document.getElementById('modalReplaceBtn').onclick = () => { resolve(id, 'REPLACE'); hideModal(); };
@@ -511,5 +589,38 @@ function showDamageDetails(id, item, category, qty, by, date, note) {
 }
 
 function hideModal() {
-    document.getElementById('damageModal').style.display = 'none';
+    const modal = document.getElementById('damageModal');
+    modal.style.display = 'none';
+} 
+
+// Called when user clicks a category row in the NORMAL view
+function loadCategoryItems(categoryName) {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+
+    function inRangeDate(ts) {
+        if(!dateFrom && !dateTo) return true;
+        const d = dateOnly(ts);
+        if (dateFrom && d < dateFrom) return false;
+        if (dateTo && d > dateTo) return false;
+        return true;
+    }
+
+    const items = globalInventory.filter(i => i.category === categoryName && (i.last_updated_at ? inRangeDate(i.last_updated_at) : true));
+    const output = document.getElementById('reportOutput');
+
+    if (items.length === 0) {
+        output.innerHTML = `<p style="text-align:center; padding:18px;">No items found for <strong>${categoryName}</strong> in the selected date range.</p>`;
+        return;
+    }
+
+    let html = `<h4 style="color:#00f2ff; margin-bottom:8px;">${categoryName} — Items (Total: ${items.reduce((s,i) => s + i.qty, 0)})</h4>`;
+    html += `<table class="glass-table"><thead><tr><th>Item</th><th>Qty</th><th>Last Updated</th></tr></thead><tbody>`;
+    items.forEach(it => {
+        html += `<tr><td style="font-weight:600">${it.item_name}</td><td style="font-weight:700">${it.qty}</td><td>${it.last_updated_at ? new Date(it.last_updated_at).toLocaleString() : 'N/A'}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+
+    html = `<div style="margin-bottom:12px;"><button onclick="loadReport('NORMAL', null)" class="tab-btn" style="width:120px">← Back</button></div>` + html;
+    output.innerHTML = html;
 }
