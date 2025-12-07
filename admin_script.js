@@ -18,11 +18,25 @@ window.onload = function() {
         fetchData(); 
         setInterval(fetchData, 5000); 
     }
-    // Load default report when reports tab is first accessed
     switchTab('overview'); 
 };
 
 // --- HELPER FUNCTIONS ---
+
+/**
+ * ⭐️ NEW HELPER: Cleans a string to be safely passed into an HTML onclick attribute.
+ * Removes line breaks, tabs, and quotes that would break the JavaScript call.
+ */
+function cleanString(str) {
+    if (!str) return '';
+    // 1. Double quotes (") and Single quotes (') ඉවත් කිරීම.
+    let cleaned = String(str).replace(/"/g, '').replace(/'/g, ''); 
+    // 2. Line breaks සහ tabs ඉවත් කිරීම (onclick attribute එක කැඩීම වැලැක්වීමට).
+    cleaned = cleaned.replace(/(\r\n|\n|\r|\t)/gm, ' '); 
+    return cleaned.trim();
+}
+
+
 function getHeaders() {
     return { 
         'Content-Type': 'application/json', 
@@ -48,7 +62,6 @@ function switchTab(id) {
         renderInventorySummary(globalInventory);
     }
     if(id === 'reports') {
-        // Report tab එකට එන විට default report එක load කරන්න
         const defaultBtn = document.querySelector('.tab-btn.active');
         if (defaultBtn) defaultBtn.click();
     }
@@ -57,15 +70,12 @@ function switchTab(id) {
 // --- 2. CORE DATA FETCHING (DASHBOARD) ---
 async function fetchData() {
     try {
-        // 1. Inventory Data
         const resInv = await fetch(`${API_URL}/api/admin/stats?type=NORMAL`, { headers: getHeaders() });
         globalInventory = await resInv.json();
 
-        // 2. Pending Damages
         const resDmg = await fetch(`${API_URL}/api/admin/stats?type=DAMAGES`, { headers: getHeaders() });
         const damages = await resDmg.json();
         
-        // 3. Advance Logs Data
         const resLogs = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getHeaders() });
         globalLogs = await resLogs.json(); 
 
@@ -103,7 +113,6 @@ function updateDashboardUI(inv, dmg) {
 
     catGrid.innerHTML = '';
     for (const [catName, totalQty] of Object.entries(categories)) {
-        // ⭐️ Line Order Handling: Click event එකෙන් Inventory Tab එකට ගිහින් filter කරන්න
         catGrid.innerHTML += `
             <div class="cat-card" onclick="switchTab('inventory'); filterInventoryByCategory('${catName}')">
                 <div class="cat-title">${catName}</div>
@@ -140,9 +149,18 @@ function updateDashboardUI(inv, dmg) {
     } else {
         dmg.forEach(d => {
             const typeBadge = d.damage_type === 'DAMAGE' ? '<span style="color:#ff4d4d;font-weight:bold">DAMAGE</span>' : '<span style="color:#ffb300;font-weight:bold">SHORTAGE</span>';
-            // ⭐️ Row එක ක්ලික් කළ විට Modal එක පෙන්වන්න
+            
+            // ⭐️ Note එක safe කිරීමට cleanString භාවිත කරන්න
+            const safeNote = cleanString(d.note || 'No note provided.');
+
             dTable.innerHTML += `
-                <tr onclick="showDamageDetails(${d.id}, '${d.item_name}', '${d.category}', ${d.damage_qty}, '${d.reported_by}', '${d.reported_at}', \`${d.note || 'No note provided.'}\`)">
+                <tr onclick="showDamageDetails(${d.id}, 
+                                  '${d.item_name}', 
+                                  '${d.category}', 
+                                  ${d.damage_qty}, 
+                                  '${d.reported_by}', 
+                                  '${d.reported_at}', 
+                                  '${safeNote}')">
                     <td>${new Date(d.reported_at).toLocaleDateString()}</td>
                     <td>${d.item_name} <br><small>${d.category}</small></td>
                     <td>${typeBadge}</td>
@@ -177,7 +195,6 @@ document.getElementById('inventorySearchInput').addEventListener('input', (e) =>
     renderInventorySummary(filtered);
 });
 
-// ⭐️ NEW FUNCTION: Category Filter
 function filterInventoryByCategory(categoryName) {
     const searchInput = document.getElementById('inventorySearchInput');
     searchInput.value = categoryName; 
@@ -190,7 +207,6 @@ function renderInventorySummary(data) {
     const tbody = document.getElementById('inventoryTable');
     tbody.innerHTML = '';
     
-    // Group Data by Name & Category (Summing Qty)
     const grouped = {};
     data.forEach(i => {
         const key = i.category + "|" + i.item_name;
@@ -213,6 +229,7 @@ function renderInventorySummary(data) {
         else if (i.total < 10) status = '<span style="color:#ffb300; font-weight:bold">Low Stock</span>';
         else status = '<span style="color:#00e676; font-weight:bold">Good</span>';
         
+        // Size column removed from summary table
         tbody.innerHTML += `
             <tr>
                 <td>${i.category}</td>
@@ -225,7 +242,6 @@ function renderInventorySummary(data) {
 
 // --- 4. SMART SEARCH (Dropdown Logic) ---
 function setupSmartSearch(inputId, dropdownId, onSelect) {
-    // ... (Existing Smart Search Code) ...
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     
@@ -235,14 +251,12 @@ function setupSmartSearch(inputId, dropdownId, onSelect) {
         
         if(val.length < 1) { dropdown.style.display = 'none'; return; }
 
-        // Unique item names only
         const uniqueItems = Array.from(new Set(globalInventory.map(i => i.item_name)));
         const matches = uniqueItems.filter(name => name.toLowerCase().includes(val));
         
         if(matches.length > 0) {
             dropdown.style.display = 'block';
             matches.forEach(name => {
-                // Find the first instance to get category
                 const item = globalInventory.find(i => i.item_name === name); 
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
@@ -271,7 +285,7 @@ setupSmartSearch('opSearch', 'opDropdown', (item) => {
 });
 setupSmartSearch('repItemSearch', 'repDropdown', (item) => { 
     selectedRepItemName = item.item_name; 
-    loadReport('ITEM', null); // Pass null for event
+    loadReport('ITEM', null); 
 });
 
 // --- 5. STOCK OPERATIONS (Admin) ---
@@ -314,7 +328,6 @@ function loadReport(type, event) {
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     
-    // Reset display settings
     chartContainer.style.display = 'none';
     kpiGrid.style.display = 'none';
     
@@ -337,7 +350,6 @@ function loadReport(type, event) {
         const grouped = {};
         globalInventory.forEach(i => { if(!grouped[i.category]) grouped[i.category]=[]; grouped[i.category].push(i); });
         
-        // ⭐️ Normal Report: Category Breakdown Chart
         chartContainer.style.display = 'block';
         const chartData = {
             labels: Object.keys(grouped),
@@ -350,7 +362,6 @@ function loadReport(type, event) {
 
         let html = '';
         for(const [cat, items] of Object.entries(grouped)) {
-            // ⭐️ Size column removed
             html += `<h4 style="color:#00f2ff; margin-top:15px; border-bottom:1px solid #333">${cat} (Total: ${items.reduce((sum, item) => sum + item.qty, 0)})</h4><table class="glass-table"><tr><th>Item</th><th>Qty</th></tr>`;
             items.forEach(x => html += `<tr><td>${x.item_name}</td><td>${x.qty}</td></tr>`);
             html += `</table>`;
@@ -360,7 +371,6 @@ function loadReport(type, event) {
     } else if (type === 'ADVANCE') {
         const filtered = globalLogs.filter(l => isInRange(l.timestamp));
         
-        // ⭐️ Advance Report: KPI Cards & Line Chart
         kpiGrid.style.display = 'grid';
         chartContainer.style.display = 'block';
         
@@ -412,7 +422,6 @@ function loadReport(type, event) {
         if(!selectedRepItemName) { output.innerHTML = '<p style="text-align:center">Please search and select an item above.</p>'; return; }
         const filtered = globalLogs.filter(l => l.item_name_snapshot === selectedRepItemName && isInRange(l.timestamp));
         
-        // ⭐️ Item History: Line Chart
         chartContainer.style.display = 'block';
         const historyData = filtered.map(l => ({ 
             x: new Date(l.timestamp).toLocaleString(), 
@@ -438,7 +447,7 @@ function loadReport(type, event) {
 
 function renderChart(type, data, title) {
     if (chartInstance) {
-        chartInstance.destroy(); // පැරණි Chart එක destroy කරන්න
+        chartInstance.destroy(); 
     }
     const ctx = document.getElementById('reportChart').getContext('2d');
     chartInstance = new Chart(ctx, {
@@ -467,8 +476,7 @@ document.getElementById('addItemForm').addEventListener('submit', async (e) => {
         item_name: document.getElementById('itemName').value,
         sku: document.getElementById('itemSku').value,
         category: document.getElementById('itemCategory').value,
-        // ⭐️ size removed
-        size: '' // size empty string එකක් ලෙස යවන්න
+        size: '' 
     };
     const res = await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
     if(res.ok) { alert("✅ Item Added!"); document.getElementById('addItemForm').reset(); fetchData(); } 
@@ -485,7 +493,7 @@ async function resolve(id, decision) {
     } catch(e) { alert("Server Error"); }
 }
 
-// ⭐️ NEW: Damage Modal Functions
+// Damage Modal Functions
 function showDamageDetails(id, item, category, qty, by, date, note) {
     const modal = document.getElementById('damageModal');
     
@@ -493,9 +501,9 @@ function showDamageDetails(id, item, category, qty, by, date, note) {
     document.getElementById('modalDate').innerText = new Date(date).toLocaleString();
     document.getElementById('modalQty').innerText = qty;
     document.getElementById('modalBy').innerText = by;
+    // ⭐️ පිරිසිදු කළ Note එක මෙහි පෙන්වයි
     document.getElementById('modalNote').innerText = note; 
     
-    // Set buttons' actions
     document.getElementById('modalReplaceBtn').onclick = () => { resolve(id, 'REPLACE'); hideModal(); };
     document.getElementById('modalRemoveBtn').onclick = () => { resolve(id, 'REMOVE'); hideModal(); };
 
