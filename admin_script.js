@@ -1,103 +1,28 @@
 // --- CONFIGURATION ---
-const API_URL = "https://backpcu-production.up.railway.app";
+const API_URL = "https://backpcu-production.up.railway.app"; 
 
 // --- GLOBAL DATA STORE ---
 let globalInventory = [];
 let globalLogs = [];
 let selectedRepItemName = '';
-let currentAuthType = 'admin';
+let chartInstance = null; // Chart.js instance
 
-// --- 1. AUTHENTICATION CIRCLE SYSTEM ---
+// --- 1. INITIALIZATION ---
 window.onload = function() {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole');
-    
-    // If already logged in, show dashboard
-    if (token && role === 'admin') {
-        showDashboard();
-        fetchData();
-        setInterval(fetchData, 5000);
+
+    if (!token || role !== 'admin') {
+        window.location.href = 'index.html';
     } else {
-        // Show auth screen
-        document.getElementById('authScreen').style.display = 'flex';
-        document.getElementById('dashboardContainer').style.display = 'none';
+        fetchData(); 
+        setInterval(fetchData, 5000); 
     }
+    // Load default report when reports tab is first accessed
+    switchTab('overview'); 
 };
 
-function selectAuth(type) {
-    currentAuthType = type;
-    const circles = document.querySelectorAll('.auth-circle');
-    circles.forEach(c => c.classList.remove('active'));
-    
-    if (type === 'admin') {
-        document.getElementById('authAdmin').classList.add('active');
-        document.getElementById('adminForm').classList.add('active');
-        document.getElementById('employeeForm').classList.remove('active');
-    } else {
-        document.getElementById('authEmp').classList.add('active');
-        document.getElementById('employeeForm').classList.add('active');
-        document.getElementById('adminForm').classList.remove('active');
-    }
-}
-
-function closeAuthForm() {
-    document.getElementById('adminForm').classList.remove('active');
-    document.getElementById('employeeForm').classList.remove('active');
-    document.getElementById('authAdmin').classList.add('active');
-}
-
-async function login(type) {
-    if (type === 'admin') {
-        const username = document.getElementById('adminUser').value;
-        const password = document.getElementById('adminPass').value;
-        
-        // Simple validation (you should implement proper validation)
-        if (!username || !password) {
-            alert("Please enter both username and password");
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${API_URL}/api/admin/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', 'admin');
-                showDashboard();
-                fetchData();
-                setInterval(fetchData, 5000);
-            } else {
-                alert("Invalid credentials!");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            alert("Connection error. Please try again.");
-        }
-    } else {
-        // Employee login logic
-        const empId = document.getElementById('empId').value;
-        if (!empId) {
-            alert("Please enter Employee ID");
-            return;
-        }
-        // Redirect to employee interface
-        localStorage.setItem('empId', empId);
-        localStorage.setItem('userRole', 'employee');
-        window.location.href = 'employee.html'; // You need to create this
-    }
-}
-
-function showDashboard() {
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('dashboardContainer').style.display = 'block';
-}
-
-// --- 2. HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS ---
 function getHeaders() {
     return { 
         'Content-Type': 'application/json', 
@@ -111,25 +36,25 @@ function logout() {
 }
 
 function switchTab(id) {
-    // Hide all sections
     document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-    // Show selected section
     document.getElementById(`tab-${id}`).style.display = 'block';
     
-    // Sidebar Active State
     document.querySelectorAll('.glass-sidebar li').forEach(li => li.classList.remove('active'));
     const activeBtn = document.querySelector(`li[onclick="switchTab('${id}')"]`);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // Tab Specific Actions
     if(id === 'inventory') {
-        document.getElementById('inventorySearchInput').value = '';
+        document.getElementById('inventorySearchInput').value = ''; 
         renderInventorySummary(globalInventory);
     }
-    if(id === 'reports') fetchLogs(); 
+    if(id === 'reports') {
+        // Report tab එකට එන විට default report එක load කරන්න
+        const defaultBtn = document.querySelector('.tab-btn.active');
+        if (defaultBtn) defaultBtn.click();
+    }
 }
 
-// --- 3. CORE DATA FETCHING ---
+// --- 2. CORE DATA FETCHING (DASHBOARD) ---
 async function fetchData() {
     try {
         // 1. Inventory Data
@@ -139,10 +64,32 @@ async function fetchData() {
         // 2. Pending Damages
         const resDmg = await fetch(`${API_URL}/api/admin/stats?type=DAMAGES`, { headers: getHeaders() });
         const damages = await resDmg.json();
+        
+        // 3. Advance Logs Data
+        const resLogs = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getHeaders() });
+        globalLogs = await resLogs.json(); 
 
         updateDashboardUI(globalInventory, damages);
+        updateLastActivity(); 
+
     } catch (e) { console.error("Data Load Error", e); }
 }
+
+function updateLastActivity() {
+    const lastActivityElement = document.getElementById('lastActivityInfo');
+    if(!lastActivityElement) return;
+
+    if (globalLogs.length > 0) {
+        const lastLog = globalLogs[0]; 
+        const time = new Date(lastLog.timestamp).toLocaleString();
+        lastActivityElement.innerHTML = `
+            <i class="fas fa-history"></i> <strong>Last Activity:</strong> ${lastLog.item_name_snapshot} (${lastLog.action_type}) by ${lastLog.user_name} at ${time}
+        `;
+    } else {
+         lastActivityElement.innerHTML = `<i class="fas fa-history"></i> No recent activity found.`;
+    }
+}
+
 
 function updateDashboardUI(inv, dmg) {
     // A. CATEGORY BREAKDOWN CARDS
@@ -156,14 +103,15 @@ function updateDashboardUI(inv, dmg) {
 
     catGrid.innerHTML = '';
     for (const [catName, totalQty] of Object.entries(categories)) {
+        // ⭐️ Line Order Handling: Click event එකෙන් Inventory Tab එකට ගිහින් filter කරන්න
         catGrid.innerHTML += `
-            <div class="cat-card">
+            <div class="cat-card" onclick="switchTab('inventory'); filterInventoryByCategory('${catName}')">
                 <div class="cat-title">${catName}</div>
                 <div class="cat-count">${totalQty}</div>
             </div>`;
     }
 
-    // B. STAGNANT ITEMS ALERT
+    // B. STAGNANT ITEMS ALERT (> 2 Days)
     const stagnantBox = document.getElementById('stagnantBox');
     const stagnantList = document.getElementById('stagnantItems');
     stagnantList.innerHTML = '';
@@ -192,16 +140,17 @@ function updateDashboardUI(inv, dmg) {
     } else {
         dmg.forEach(d => {
             const typeBadge = d.damage_type === 'DAMAGE' ? '<span style="color:#ff4d4d;font-weight:bold">DAMAGE</span>' : '<span style="color:#ffb300;font-weight:bold">SHORTAGE</span>';
+            // ⭐️ Row එක ක්ලික් කළ විට Modal එක පෙන්වන්න
             dTable.innerHTML += `
-                <tr>
+                <tr onclick="showDamageDetails(${d.id}, '${d.item_name}', '${d.category}', ${d.damage_qty}, '${d.reported_by}', '${d.reported_at}', \`${d.note || 'No note provided.'}\`)">
                     <td>${new Date(d.reported_at).toLocaleDateString()}</td>
                     <td>${d.item_name} <br><small>${d.category}</small></td>
                     <td>${typeBadge}</td>
                     <td style="font-size:1.1em; font-weight:bold">${d.damage_qty}</td>
                     <td>${d.reported_by}</td>
                     <td>
-                        <button class="btn-action btn-approve" onclick="resolve(${d.id},'REPLACE')">Replace</button>
-                        <button class="btn-action btn-reject" onclick="resolve(${d.id},'REMOVE')">Remove</button>
+                        <button class="btn-action btn-approve" onclick="event.stopPropagation(); resolve(${d.id},'REPLACE')">Replace</button>
+                        <button class="btn-action btn-reject" onclick="event.stopPropagation(); resolve(${d.id},'REMOVE')">Remove</button>
                     </td>
                 </tr>`;
         });
@@ -210,12 +159,15 @@ function updateDashboardUI(inv, dmg) {
     // D. LIVE UPDATE INVENTORY LIST
     if(document.getElementById('tab-inventory').style.display === 'block') {
         const searchVal = document.getElementById('inventorySearchInput').value.toLowerCase();
-        const filtered = searchVal ? globalInventory.filter(i => i.item_name.toLowerCase().includes(searchVal)) : globalInventory;
+        const filtered = searchVal ? globalInventory.filter(i => 
+            i.item_name.toLowerCase().includes(searchVal) || 
+            i.category.toLowerCase().includes(searchVal)
+        ) : globalInventory;
         renderInventorySummary(filtered);
     }
 }
 
-// --- 4. INVENTORY SUMMARY LIST ---
+// --- 3. INVENTORY SUMMARY LIST LOGIC (Grouping) ---
 document.getElementById('inventorySearchInput').addEventListener('input', (e) => {
     const val = e.target.value.toLowerCase();
     const filtered = globalInventory.filter(i => 
@@ -225,10 +177,20 @@ document.getElementById('inventorySearchInput').addEventListener('input', (e) =>
     renderInventorySummary(filtered);
 });
 
+// ⭐️ NEW FUNCTION: Category Filter
+function filterInventoryByCategory(categoryName) {
+    const searchInput = document.getElementById('inventorySearchInput');
+    searchInput.value = categoryName; 
+    const filtered = globalInventory.filter(i => i.category.toLowerCase().includes(categoryName.toLowerCase()));
+    renderInventorySummary(filtered);
+}
+
+
 function renderInventorySummary(data) {
     const tbody = document.getElementById('inventoryTable');
     tbody.innerHTML = '';
     
+    // Group Data by Name & Category (Summing Qty)
     const grouped = {};
     data.forEach(i => {
         const key = i.category + "|" + i.item_name;
@@ -261,8 +223,9 @@ function renderInventorySummary(data) {
     });
 }
 
-// --- 5. SMART SEARCH ---
+// --- 4. SMART SEARCH (Dropdown Logic) ---
 function setupSmartSearch(inputId, dropdownId, onSelect) {
+    // ... (Existing Smart Search Code) ...
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     
@@ -272,21 +235,22 @@ function setupSmartSearch(inputId, dropdownId, onSelect) {
         
         if(val.length < 1) { dropdown.style.display = 'none'; return; }
 
-        const matches = globalInventory.filter(i => 
-            i.item_name.toLowerCase().includes(val) || 
-            (i.sku && i.sku.toLowerCase().includes(val))
-        );
+        // Unique item names only
+        const uniqueItems = Array.from(new Set(globalInventory.map(i => i.item_name)));
+        const matches = uniqueItems.filter(name => name.toLowerCase().includes(val));
         
         if(matches.length > 0) {
             dropdown.style.display = 'block';
-            matches.forEach(m => {
+            matches.forEach(name => {
+                // Find the first instance to get category
+                const item = globalInventory.find(i => i.item_name === name); 
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
-                div.innerHTML = `${m.item_name} <small>(${m.category})</small>`;
+                div.innerHTML = `${name} <small>(${item.category})</small>`;
                 div.onclick = () => { 
-                    input.value = m.item_name; 
+                    input.value = name; 
                     dropdown.style.display = 'none'; 
-                    onSelect(m); 
+                    onSelect(item); 
                 };
                 dropdown.appendChild(div);
             });
@@ -302,18 +266,15 @@ function setupSmartSearch(inputId, dropdownId, onSelect) {
     });
 }
 
-// Setup searches
-document.addEventListener('DOMContentLoaded', () => {
-    setupSmartSearch('opSearch', 'opDropdown', (item) => { 
-        document.getElementById('selectedItemId').value = item.id; 
-    });
-    setupSmartSearch('repItemSearch', 'repDropdown', (item) => { 
-        selectedRepItemName = item.item_name; 
-        loadReport('ITEM'); 
-    });
+setupSmartSearch('opSearch', 'opDropdown', (item) => { 
+    document.getElementById('selectedItemId').value = item.id; 
+});
+setupSmartSearch('repItemSearch', 'repDropdown', (item) => { 
+    selectedRepItemName = item.item_name; 
+    loadReport('ITEM', null); // Pass null for event
 });
 
-// --- 6. STOCK OPERATIONS ---
+// --- 5. STOCK OPERATIONS (Admin) ---
 async function performStockOp() {
     const id = document.getElementById('selectedItemId').value;
     const type = document.getElementById('opType').value;
@@ -344,17 +305,24 @@ async function performStockOp() {
     } catch(e) { alert("Server Error"); }
 }
 
-// --- 7. REPORTS SYSTEM ---
-async function fetchLogs() {
-    const res = await fetch(`${API_URL}/api/admin/stats?type=ADVANCE`, { headers: getHeaders() });
-    globalLogs = await res.json();
-}
+// --- 6. REPORTS SYSTEM ---
 
-function loadReport(type) {
+function loadReport(type, event) {
     const output = document.getElementById('reportOutput');
+    const chartContainer = document.getElementById('chartContainer');
+    const kpiGrid = document.getElementById('kpiGrid');
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     
+    // Reset display settings
+    chartContainer.style.display = 'none';
+    kpiGrid.style.display = 'none';
+    
+    // Toggle Active Buttons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if(event) event.target.classList.add('active');
+    else document.querySelector(`[onclick="loadReport('${type}', event)"]`).classList.add('active');
+
     const isInRange = (timestamp) => {
         if(!dateFrom && !dateTo) return true;
         const date = new Date(timestamp).toISOString().split('T')[0];
@@ -364,24 +332,76 @@ function loadReport(type) {
     };
 
     document.getElementById('itemReportSearch').style.display = (type === 'ITEM') ? 'block' : 'none';
-    
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
 
     if (type === 'NORMAL') {
         const grouped = {};
         globalInventory.forEach(i => { if(!grouped[i.category]) grouped[i.category]=[]; grouped[i.category].push(i); });
+        
+        // ⭐️ Normal Report: Category Breakdown Chart
+        chartContainer.style.display = 'block';
+        const chartData = {
+            labels: Object.keys(grouped),
+            datasets: [{
+                data: Object.keys(grouped).map(cat => grouped[cat].reduce((sum, item) => sum + item.qty, 0)),
+                backgroundColor: ['#00f2ff', '#ffb300', '#00e676', '#ff4d4d', '#1845ad', '#ff0055', '#AAAAAA'],
+            }]
+        };
+        renderChart('pie', chartData, 'Inventory Breakdown by Category');
+
         let html = '';
         for(const [cat, items] of Object.entries(grouped)) {
-            html += `<h4 style="color:#00f2ff; margin-top:15px; border-bottom:1px solid #333">${cat}</h4><table class="glass-table"><tr><th>Item</th><th>Size</th><th>Qty</th></tr>`;
-            items.forEach(x => html += `<tr><td>${x.item_name}</td><td>${x.size||'-'}</td><td>${x.qty}</td></tr>`);
+            // ⭐️ Size column removed
+            html += `<h4 style="color:#00f2ff; margin-top:15px; border-bottom:1px solid #333">${cat} (Total: ${items.reduce((sum, item) => sum + item.qty, 0)})</h4><table class="glass-table"><tr><th>Item</th><th>Qty</th></tr>`;
+            items.forEach(x => html += `<tr><td>${x.item_name}</td><td>${x.qty}</td></tr>`);
             html += `</table>`;
         }
         output.innerHTML = html;
 
     } else if (type === 'ADVANCE') {
         const filtered = globalLogs.filter(l => isInRange(l.timestamp));
-        let html = `<table class="glass-table"><tr><th>Date</th><th>Action</th><th>Item</th><th>Qty</th><th>User</th></tr>`;
+        
+        // ⭐️ Advance Report: KPI Cards & Line Chart
+        kpiGrid.style.display = 'grid';
+        chartContainer.style.display = 'block';
+        
+        const totalIn = filtered.filter(l => l.action_type === 'IN').reduce((sum, l) => sum + l.qty_changed, 0);
+        const totalOut = filtered.filter(l => l.action_type === 'OUT').reduce((sum, l) => sum + l.qty_changed, 0);
+        const netChange = totalIn - totalOut;
+
+        document.getElementById('kpiIn').innerText = totalIn;
+        document.getElementById('kpiOut').innerText = totalOut;
+        document.getElementById('kpiNet').innerText = netChange;
+        document.getElementById('kpiNet').style.color = netChange >= 0 ? '#00e676' : '#ff4d4d';
+
+
+        const dailyData = filtered.reduce((acc, log) => {
+            const date = new Date(log.timestamp).toLocaleDateString('en-US');
+            if (!acc[date]) acc[date] = { IN: 0, OUT: 0 };
+            acc[date][log.action_type] += log.qty_changed;
+            return acc;
+        }, {});
+
+        const dates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+        const chartData = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Stock IN',
+                    data: dates.map(date => dailyData[date].IN),
+                    borderColor: '#00e676',
+                    tension: 0.1
+                },
+                {
+                    label: 'Stock OUT',
+                    data: dates.map(date => dailyData[date].OUT),
+                    borderColor: '#ff4d4d',
+                    tension: 0.1
+                }
+            ]
+        };
+        renderChart('line', chartData, 'Daily Stock Movement');
+
+        let html = `<table class="glass-table"><tr><th>Date/Time</th><th>Action</th><th>Item</th><th>Qty</th><th>User</th></tr>`;
         filtered.forEach(l => {
             let color = l.action_type==='IN'?'#00ff88':(l.action_type==='OUT'?'orange':'red');
             html += `<tr><td>${new Date(l.timestamp).toLocaleString()}</td><td style="color:${color}">${l.action_type}</td><td>${l.item_name_snapshot}</td><td>${l.qty_changed}</td><td>${l.user_name}</td></tr>`;
@@ -391,20 +411,64 @@ function loadReport(type) {
     } else if (type === 'ITEM') {
         if(!selectedRepItemName) { output.innerHTML = '<p style="text-align:center">Please search and select an item above.</p>'; return; }
         const filtered = globalLogs.filter(l => l.item_name_snapshot === selectedRepItemName && isInRange(l.timestamp));
-        let html = `<h3>History: ${selectedRepItemName}</h3><table class="glass-table"><tr><th>Date</th><th>Action</th><th>Qty</th><th>User</th></tr>`;
+        
+        // ⭐️ Item History: Line Chart
+        chartContainer.style.display = 'block';
+        const historyData = filtered.map(l => ({ 
+            x: new Date(l.timestamp).toLocaleString(), 
+            y: l.action_type === 'IN' ? l.qty_changed : -l.qty_changed 
+        }));
+
+        const chartData = {
+            labels: historyData.map(d => d.x),
+            datasets: [{
+                label: 'Qty Change',
+                data: historyData.map(d => d.y),
+                backgroundColor: historyData.map(d => d.y > 0 ? '#00e676' : '#ff4d4d'),
+                type: 'bar',
+            }]
+        };
+        renderChart('bar', chartData, `History: ${selectedRepItemName}`);
+        
+        let html = `<h3>History: ${selectedRepItemName}</h3><table class="glass-table"><tr><th>Date/Time</th><th>Action</th><th>Qty</th><th>User</th></tr>`;
         filtered.forEach(l => { html += `<tr><td>${new Date(l.timestamp).toLocaleString()}</td><td>${l.action_type}</td><td>${l.qty_changed}</td><td>${l.user_name}</td></tr>`; });
         output.innerHTML = html + '</table>';
     }
 }
 
-// --- 8. OTHER ACTIONS ---
+function renderChart(type, data, title) {
+    if (chartInstance) {
+        chartInstance.destroy(); // පැරණි Chart එක destroy කරන්න
+    }
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: type,
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: { display: true, text: title, color: 'white', font: { size: 16 } },
+                legend: { labels: { color: 'white' } }
+            },
+            scales: {
+                x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+        }
+    });
+}
+
+
+// --- 7. OTHER ACTIONS (Add, Resolve, Modal) ---
 document.getElementById('addItemForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
         item_name: document.getElementById('itemName').value,
         sku: document.getElementById('itemSku').value,
         category: document.getElementById('itemCategory').value,
-        size: document.getElementById('itemSize').value
+        // ⭐️ size removed
+        size: '' // size empty string එකක් ලෙස යවන්න
     };
     const res = await fetch(`${API_URL}/api/admin/add-item`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
     if(res.ok) { alert("✅ Item Added!"); document.getElementById('addItemForm').reset(); fetchData(); } 
@@ -419,4 +483,25 @@ async function resolve(id, decision) {
         });
         if(res.ok) { alert("Done!"); fetchData(); } else { alert("Error"); }
     } catch(e) { alert("Server Error"); }
+}
+
+// ⭐️ NEW: Damage Modal Functions
+function showDamageDetails(id, item, category, qty, by, date, note) {
+    const modal = document.getElementById('damageModal');
+    
+    document.getElementById('modalTitle').innerText = `${item} (${category})`;
+    document.getElementById('modalDate').innerText = new Date(date).toLocaleString();
+    document.getElementById('modalQty').innerText = qty;
+    document.getElementById('modalBy').innerText = by;
+    document.getElementById('modalNote').innerText = note; 
+    
+    // Set buttons' actions
+    document.getElementById('modalReplaceBtn').onclick = () => { resolve(id, 'REPLACE'); hideModal(); };
+    document.getElementById('modalRemoveBtn').onclick = () => { resolve(id, 'REMOVE'); hideModal(); };
+
+    modal.style.display = 'flex';
+}
+
+function hideModal() {
+    document.getElementById('damageModal').style.display = 'none';
 }
