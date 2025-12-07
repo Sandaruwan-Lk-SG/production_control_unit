@@ -3,133 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin | Corrected</title>
+    <title>PCU Admin | Master Control</title>
+    
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        /* විශේෂ නිවැරදි කිරීම් */
-        .search-results-box {
-            position: absolute; top: 100%; left: 0; width: 100%;
-            background: #1a1a2e; border: 1px solid #444; border-top: none;
-            border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto;
-            z-index: 999; display: none;
+        .stagnant-container {
+            background: rgba(255, 77, 77, 0.15);
+            border: 1px solid #ff4d4d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none;
         }
-        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; color: white; }
-        .search-item:hover { background: #00f2ff; color: black; }
-
-        /* Report Filters */
-        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-        .hidden-filter { display: none; }
+        .stagnant-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .stagnant-badge { 
+            background: #ff4d4d; color: white; padding: 5px 10px; 
+            border-radius: 5px; font-size: 13px; display: flex; align-items: center; 
+        }
+        .cat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .cat-title { color: #00f2ff; font-size: 14px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .cat-count { font-size: 32px; font-weight: bold; color: white; }
+        
+        /* Auth Page Styles */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f1015 0%, #1a1a2e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .circle-auth {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+        
+        .auth-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center;
+        }
+        
+        .auth-circle.active {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: #00f2ff;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            transform: scale(1.1);
+            z-index: 2;
+        }
+        
+        .auth-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .auth-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .auth-form {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 16, 21, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 3;
+        }
+        
+        .auth-form.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: #00f2ff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes rotateIn {
+            from { transform: rotate(-180deg) scale(0.5); opacity: 0; }
+            to { transform: rotate(0) scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="background"><div class="shape"></div><div class="shape"></div></div>
-
-    <div class="dashboard-container">
-        
-        <nav class="glass-sidebar">
-            <div class="profile"><i class="fas fa-user-cog fa-3x" style="color:#00f2ff"></i><h3>ADMIN</h3></div>
-            <ul>
-                <li onclick="switchTab('overview')" class="active"><i class="fas fa-th"></i> <span>Overview</span></li>
-                <li onclick="switchTab('add_item')"><i class="fas fa-plus"></i> <span>Add Item</span></li>
-                <li onclick="switchTab('operations')"><i class="fas fa-exchange-alt"></i> <span>Operations</span></li>
-                <li onclick="switchTab('inventory')"><i class="fas fa-list"></i> <span>Stock List</span></li>
-                <li onclick="switchTab('reports')"><i class="fas fa-chart-line"></i> <span>Reports</span></li>
-                <li onclick="logout()" style="margin-top:auto; color:#ff4d4d;"><i class="fas fa-power-off"></i> <span>Logout</span></li>
-            </ul>
-        </nav>
-
-        <main class="glass-content">
+    <!-- Authentication Circle Screen -->
+    <div id="authScreen" class="auth-container">
+        <div class="circle-auth">
+            <div class="auth-circle" onclick="selectAuth('employee')" id="authEmp">
+                <i class="fas fa-user-tie auth-icon"></i>
+                <span class="auth-title">EMPLOYEE</span>
+            </div>
+            <div class="auth-circle active" onclick="selectAuth('admin')" id="authAdmin">
+                <i class="fas fa-user-secret auth-icon"></i>
+                <span class="auth-title">ADMIN</span>
+            </div>
             
-            <section id="tab-overview" class="active-section">
-                <h2>Dashboard Overview</h2>
-                
-                <div id="stagnantBox" class="alert-box" style="display:none;">
-                    <div class="alert-header"><i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)</div>
-                    <div id="stagnantItems" class="alert-body"></div>
+            <!-- Admin Login Form -->
+            <div id="adminForm" class="auth-form">
+                <button class="back-btn" onclick="closeAuthForm()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 style="text-align: center; margin-bottom: 30px; color: #00f2ff;">
+                    <i class="fas fa-user-secret"></i> ADMIN LOGIN
+                </h2>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="adminUser" placeholder="Enter admin username" class="glass-input">
                 </div>
-
-                <h3 style="color:#aaa; font-size:14px; margin:20px 0 10px 0;">Stock Levels</h3>
-                <div id="categorySummaryGrid" class="summary-grid"><p>Loading...</p></div>
-                
-                <h3 style="color:#ff4d4d; margin-top:30px;">Pending Issues</h3>
-                <div class="table-wrapper">
-                    <table class="glass-table"><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Action</th></tr></thead><tbody id="damageTable"></tbody></table>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="adminPass" placeholder="Enter password" class="glass-input">
                 </div>
-            </section>
-
-            <section id="tab-add_item" style="display: none;">
-                <h2>Add Item</h2>
-                <form id="addItemForm" class="internal-form">
-                    <input type="text" id="itemName" placeholder="Item Name *" required>
-                    <input type="text" id="itemSku" placeholder="SKU">
-                    <select id="itemCategory">
-                        <option>Packing</option><option>Insole</option><option>Sole</option><option>Upper</option>
-                        <option>Cut Insole</option><option>Cut Upper</option><option>Line Order</option>
-                    </select>
-                    <input type="text" id="itemSize" placeholder="Size">
-                    <button type="submit">Save</button>
-                </form>
-            </section>
-
-            <section id="tab-operations" style="display: none;">
-                <h2>Operations</h2>
-                <div class="search-wrapper" style="position:relative;">
-                    <input type="text" id="opSearch" placeholder="Type to search item..." autocomplete="off">
-                    <div id="opDropdown" class="search-results-box"></div> </div>
-                <input type="hidden" id="selectedItemId">
-                
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <select id="opType"><option value="IN">IN (+)</option><option value="OUT">OUT (-)</option></select>
-                    <input type="number" id="opQty" placeholder="Qty">
+                <button onclick="login('admin')" style="margin-top: 20px; background: #00f2ff; color: black;">
+                    <i class="fas fa-sign-in-alt"></i> ACCESS CONTROL
+                </button>
+            </div>
+            
+            <!-- Employee Login Form -->
+            <div id="employeeForm" class="auth-form">
+                <button class="back-btn" onclick="closeAuthForm()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 style="text-align: center; margin-bottom: 30px; color: #00ff88;">
+                    <i class="fas fa-user-tie"></i> EMPLOYEE LOGIN
+                </h2>
+                <div class="form-group">
+                    <label>Employee ID</label>
+                    <input type="text" id="empId" placeholder="Enter your ID" class="glass-input">
                 </div>
-                <button onclick="performStockOp()" style="margin-top:15px;">Update Stock</button>
-            </section>
+                <button onclick="login('employee')" style="margin-top: 20px; background: #00ff88; color: black;">
+                    <i class="fas fa-sign-in-alt"></i> CLOCK IN
+                </button>
+            </div>
+        </div>
+    </div>
 
-            <section id="tab-inventory" style="display: none;">
-                <h2>Stock List</h2>
-                <div class="search-wrapper">
-                    <input type="text" id="inventorySearchInput" placeholder="Filter list..." autocomplete="off">
+    <!-- Main Dashboard (Initially Hidden) -->
+    <div id="dashboardContainer" style="display: none;">
+        <div class="background">
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+
+        <div class="dashboard-container">
+            <nav class="glass-sidebar">
+                <div class="profile">
+                    <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
+                    <h3>Admin Panel</h3>
                 </div>
-                <div class="table-wrapper">
-                    <table class="glass-table"><thead><tr><th>Category</th><th>Item</th><th>Total Qty</th><th>Status</th></tr></thead><tbody id="inventoryTable"></tbody></table>
-                </div>
-            </section>
+                <ul>
+                    <li onclick="switchTab('overview')" class="active">
+                        <i class="fas fa-chart-pie"></i> <span>Overview</span>
+                    </li>
+                    <li onclick="switchTab('add_item')">
+                        <i class="fas fa-plus-circle"></i> <span>Add Item</span>
+                    </li>
+                    <li onclick="switchTab('operations')">
+                        <i class="fas fa-dolly"></i> <span>Operations</span>
+                    </li>
+                    <li onclick="switchTab('inventory')">
+                        <i class="fas fa-boxes"></i> <span>Summary</span>
+                    </li>
+                    <li onclick="switchTab('reports')">
+                        <i class="fas fa-file-contract"></i> <span>Reports</span>
+                    </li>
+                    <li onclick="logout()" style="margin-top: auto; color: #ff4d4d;">
+                        <i class="fas fa-power-off"></i> <span>Logout</span>
+                    </li>
+                </ul>
+            </nav>
 
-            <section id="tab-reports" style="display: none;">
-                <h2>Reports System</h2>
-                
-                <div class="filter-group" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-                    <select id="reportFilterType" onchange="toggleDateInputs()" class="glass-input" style="width:auto;">
-                        <option value="ALL">All Time</option>
-                        <option value="RANGE">Date Range</option>
-                        <option value="MONTH">Monthly</option>
-                    </select>
+            <main class="glass-content">
+                <section id="tab-overview" class="active-section">
+                    <h2>Stock Overview</h2>
 
-                    <div id="dateRangeInput" class="hidden-filter">
-                        <input type="date" id="dateStart" class="glass-input" style="width:auto;"> 
-                        <span style="color:#aaa">to</span> 
-                        <input type="date" id="dateEnd" class="glass-input" style="width:auto;">
+                    <div id="stagnantBox" class="stagnant-container">
+                        <h3 style="color:#ff4d4d; font-size:16px; margin-bottom:10px;">
+                            <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
+                        </h3>
+                        <div id="stagnantItems" class="stagnant-list"></div>
+                    </div>
+
+                    <h3 style="margin-bottom: 15px; font-size: 14px; color: #aaa;">Inventory by Category</h3>
+                    <div id="categoryGrid" class="cards-grid">
+                        <p style="color: #aaa;">Loading Data...</p>
+                    </div>
+
+                    <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
+                    <div class="table-wrapper">
+                        <table class="glass-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Item</th>
+                                    <th>Type</th>
+                                    <th>Qty</th>
+                                    <th>By</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="damageTable"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="tab-add_item" style="display: none;">
+                    <h2>Add New Item</h2>
+                    <form id="addItemForm" class="internal-form">
+                        <div class="form-group">
+                            <label>Item Name *</label>
+                            <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
+                        </div>
+                        <div class="form-group">
+                            <label>SKU (Unique ID)</label>
+                            <input type="text" id="itemSku" placeholder="Ex: KEL-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="itemCategory" class="glass-input">
+                                <option>Packing</option>
+                                <option>Insole</option>
+                                <option>Sole</option>
+                                <option>Upper</option>
+                                <option>Cut Insole</option>
+                                <option>Cut Upper</option>
+                                <option>Line Order</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Size</label>
+                            <input type="text" id="itemSize" placeholder="Ex: 10">
+                        </div>
+                        <button type="submit">Save to Database</button>
+                    </form>
+                </section>
+
+                <section id="tab-operations" style="display: none;">
+                    <h2>Stock Operations (In/Out)</h2>
+                    
+                    <label style="color:#00f2ff;">Select Item to Update:</label>
+                    <div class="search-wrapper">
+                        <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
+                        <div id="opDropdown" class="dropdown-results"></div>
+                    </div>
+                    <input type="hidden" id="selectedItemId">
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <select id="opType" class="glass-input" style="flex:1;">
+                            <option value="IN">STOCK IN (+)</option>
+                            <option value="OUT">STOCK OUT (-)</option>
+                        </select>
+                        <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
                     </div>
                     
-                    <div id="monthInput" class="hidden-filter">
-                        <input type="month" id="monthPicker" class="glass-input" style="width:auto;">
+                    <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
+                </section>
+
+                <section id="tab-inventory" style="display: none;">
+                    <h2>Inventory Summary (Total Qty)</h2>
+                    
+                    <div class="search-wrapper" style="margin-bottom: 20px;">
+                        <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name to Filter..." autocomplete="off">
                     </div>
 
-                    <button onclick="generateReport()" class="btn-action" style="width:auto; margin-left:auto;">Generate Report</button>
-                </div>
+                    <div class="table-wrapper">
+                        <table class="glass-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Item Name</th>
+                                    <th>Total Qty</th> <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTable">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
 
-                <div class="report-tabs">
-                    <button onclick="viewReportType('NORMAL')" class="tab-btn active">Stock Summary</button>
-                    <button onclick="viewReportType('ADVANCE')" class="tab-btn">Transaction Log</button>
-                </div>
+                <section id="tab-reports" style="display: none;">
+                    <h2>Reports System</h2>
+                    
+                    <div class="date-filters">
+                        <label>From: <input type="date" id="dateFrom" class="glass-input" style="width:auto; display:inline-block;"></label>
+                        <label>To: <input type="date" id="dateTo" class="glass-input" style="width:auto; display:inline-block;"></label>
+                    </div>
 
-                <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
-            </section>
+                    <div class="report-tabs">
+                        <button onclick="loadReport('NORMAL')" class="tab-btn active">Normal</button>
+                        <button onclick="loadReport('ADVANCE')" class="tab-btn">Advance</button>
+                        <button onclick="loadReport('ITEM')" class="tab-btn">History</button>
+                    </div>
 
-        </main>
+                    <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
+                        <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
+                        <div id="repDropdown" class="dropdown-results"></div>
+                    </div>
+
+                    <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
+                </section>
+            </main>
+        </div>
     </div>
+
     <script src="admin_script.js"></script>
 </body>
 </html>
