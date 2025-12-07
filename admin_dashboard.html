@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PCU Admin | Fluent Control</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="background"><div class="shape"></div><div class="shape"></div></div>
+
+    <div class="dashboard-container">
+        
+        <nav class="glass-sidebar">
+            <div class="profile">
+                <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
+                <h3>Admin Panel</h3>
+            </div>
+            <ul>
+                <li onclick="switchTab('overview')" class="active">
+                    <i class="fas fa-chart-pie"></i> <span>Overview</span>
+                </li>
+                <li onclick="switchTab('add_item')">
+                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
+                </li>
+                <li onclick="switchTab('operations')">
+                    <i class="fas fa-dolly"></i> <span>Operations</span>
+                </li>
+                <li onclick="switchTab('inventory')">
+                    <i class="fas fa-boxes"></i> <span>Summary</span>
+                </li>
+                <li onclick="switchTab('reports')">
+                    <i class="fas fa-file-contract"></i> <span>Reports</span>
+                </li>
+                <li onclick="logout()" style="margin-top: auto; color: #ff4d4d;">
+                    <i class="fas fa-power-off"></i> <span>Logout</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="glass-content">
+            
+            <section id="tab-overview" class="active-section">
+                <h2>Stock Overview</h2>
+                
+                <p id="lastActivityInfo" style="margin-bottom: 25px; padding: 10px; border-left: 5px solid var(--primary); background: rgba(0,0,0,0.3); font-size: 13px; color: var(--text-muted);"></p>
+
+                <div id="stagnantBox" class="stagnant-container">
+                    <h3 style="color:white; font-size:16px; margin-bottom:10px;">
+                        <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
+                    </h3>
+                    <div id="stagnantItems" class="stagnant-list"></div>
+                </div>
+
+                <div class="overview-grid">
+                    <div>
+                        <h3 style="margin-bottom: 15px; font-size: 14px; color: #aaa;">Inventory by Category</h3>
+                        <div id="categoryGrid" class="cards-grid">
+                            <p style="color: #aaa;">Loading Data...</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
+                        <div class="table-wrapper">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Item</th>
+                                        <th>Type</th>
+                                        <th>Qty</th>
+                                        <th>By</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="damageTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="tab-add_item" style="display: none;">
+                <h2>Add New Item</h2>
+                <form id="addItemForm" class="internal-form">
+                    <div class="form-group">
+                        <label>Item Name *</label>
+                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU (Unique ID)</label>
+                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="itemCategory" class="glass-input">
+                            <option>Packing</option>
+                            <option>Insole</option>
+                            <option>Sole</option>
+                            <option>Upper</option>
+                            <option>Cut Insole</option>
+                            <option>Cut Upper</option>
+                            <option>Line Order</option>
+                        </select>
+                    </div>
+                    <button type="submit">Save to Database</button>
+                </form>
+            </section>
+
+            <section id="tab-operations" style="display: none;">
+                <h2>Stock Operations (In/Out)</h2>
+                
+                <label style="color:#00f2ff;">Select Item to Update:</label>
+                <div class="search-wrapper">
+                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
+                    <div id="opDropdown" class="dropdown-results"></div>
+                </div>
+                <input type="hidden" id="selectedItemId">
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <select id="opType" class="glass-input" style="flex:1;">
+                        <option value="IN">STOCK IN (+)</option>
+                        <option value="OUT">STOCK OUT (-)</option>
+                    </select>
+                    <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
+                </div>
+                
+                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
+            </section>
+
+            <section id="tab-inventory" style="display: none;">
+                <h2>Inventory Summary (Total Qty)</h2>
+                
+                <div class="search-wrapper" style="margin-bottom: 20px;">
+                    <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name or Category..." autocomplete="off">
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Item Name</th>
+                                <th>Total Qty</th> <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTable">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tab-reports" style="display: none;">
+                <h2>Reports System</h2>
+                
+                <div class="date-filters">
+                    <label>From: <input type="date" id="dateFrom" class="glass-input" style="width:auto; display:inline-block;"></label>
+                    <label>To: <input type="date" id="dateTo" class="glass-input" style="width:auto; display:inline-block;"></label>
+                </div>
+
+                <div class="report-tabs">
+                    <button onclick="loadReport('NORMAL', event)" class="tab-btn active"><i class="fas fa-list-alt"></i> Normal</button>
+                    <button onclick="loadReport('ADVANCE', event)" class="tab-btn"><i class="fas fa-exchange-alt"></i> Advance</button>
+                    <button onclick="loadReport('ITEM', event)" class="tab-btn"><i class="fas fa-chart-line"></i> History</button>
+                </div>
+
+                <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
+                    <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
+                    <div id="repDropdown" class="dropdown-results"></div>
+                </div>
+
+                <div id="chartContainer" style="height: 300px; margin-bottom: 30px; display:none;">
+                    <canvas id="reportChart"></canvas>
+                </div>
+                
+                <div id="kpiGrid" class="cards-grid" style="display:none; margin-bottom: 20px;">
+                    <div class="glass-card"><i class="fas fa-sign-in-alt"></i><h3 id="kpiIn">0</h3><p>Total Stock IN</p></div>
+                    <div class="glass-card"><i class="fas fa-sign-out-alt"></i><h3 id="kpiOut">0</h3><p>Total Stock OUT</p></div>
+                    <div class="glass-card"><i class="fas fa-balance-scale"></i><h3 id="kpiNet">0</h3><p>Net Change</p></div>
+                </div>
+
+
+                <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="damageModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content glass-card">
+            <span class="modal-close" onclick="hideModal()">&times;</span>
+            <h3 id="modalTitle" style="color:var(--primary); margin-bottom:15px;">Damage Report Details</h3>
+            
+            <div class="modal-info-grid">
+                <div><strong>Reported Date:</strong> <span id="modalDate"></span></div>
+                <div><strong>Reported By:</strong> <span id="modalBy"></span></div>
+                <div><strong>Quantity:</strong> <span id="modalQty" style="font-weight:bold; color:#ffb300;"></span></div>
+            </div>
+            
+            <h4 style="margin-top:20px; border-bottom: 1px solid #333; padding-bottom: 5px; color:#ff4d4d;">
+                <i class="fas fa-exclamation-triangle"></i> Reason / Note:
+            </h4>
+            <p id="modalNote" style="white-space: pre-wrap; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;"></p>
+
+            <div class="modal-actions">
+                <button id="modalReplaceBtn" class="btn-action btn-approve" style="width:100%;">Replace Stock</button>
+                <button id="modalRemoveBtn" class="btn-action btn-reject" style="width:100%; margin-top:10px;">Remove Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin_script.js"></script>
+</body>
+</html>
