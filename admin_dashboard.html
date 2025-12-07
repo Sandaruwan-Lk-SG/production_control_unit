@@ -1,222 +1,462 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PCU Admin | Fluent Control</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<meta charset="utf-8" />
+<title>Reports — Full Feature (Client-side)</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<!-- SheetJS (xlsx) for Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- html2canvas + jsPDF for PDF export -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+  body { font-family: Inter, Arial, sans-serif; margin: 18px; color: #222; }
+  .controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  input[type="date"] { padding:6px; }
+  button { padding:8px 10px; border-radius:6px; border:1px solid #bbb; background:#fff; cursor:pointer; }
+  button.primary { background:#2563EB; color:white; border:none; }
+  .row { display:flex; gap:12px; align-items:flex-start; }
+  #reportArea { width: 700px; max-width:100%; }
+  .box { border:1px solid #E5E7EB; border-radius:8px; padding:10px; margin-bottom:8px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+  .cat-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:6px; }
+  .cat-title { font-weight:700; display:flex; gap:10px; align-items:center; }
+  .badge { padding:4px 8px; border-radius:999px; font-size:12px; background:#eee; }
+  .sub-list { margin-top:8px; padding-left:14px; display:none; }
+  .sub-item { display:flex; justify-content:space-between; padding:6px 6px; border-bottom:1px dashed #f0f0f0; cursor:pointer; }
+  .sub-item:hover { background:#fafafa; }
+  #chartWrap { width:480px; }
+  #exportBtns { display:flex; gap:8px; margin-left:auto; }
+  #modal { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:999; }
+  #modalInner { width:min(880px,95%); max-height:85vh; overflow:auto; background:white; border-radius:10px; padding:14px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:8px; border-bottom:1px solid #eee; text-align:left; }
+  .color-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; }
+  .topbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+</style>
 </head>
 <body>
 
-    <div class="background"><div class="shape"></div><div class="shape"></div></div>
+<h2>Reports (Client-side) — Full Feature</h2>
 
-    <div class="dashboard-container">
-        
-        <nav class="glass-sidebar">
-            <div class="profile">
-                <i class="fas fa-user-secret fa-3x" style="color: #00f2ff;"></i>
-                <h3>Admin Panel</h3>
-            </div>
-            <ul>
-                <li onclick="switchTab('overview')" class="active">
-                    <i class="fas fa-chart-pie"></i> <span>Overview</span>
-                </li>
-                <li onclick="switchTab('add_item')">
-                    <i class="fas fa-plus-circle"></i> <span>Add Item</span>
-                </li>
-                <li onclick="switchTab('operations')">
-                    <i class="fas fa-dolly"></i> <span>Operations</span>
-                </li>
-                <li onclick="switchTab('inventory')">
-                    <i class="fas fa-boxes"></i> <span>Summary</span>
-                </li>
-                <li onclick="switchTab('reports')">
-                    <i class="fas fa-file-contract"></i> <span>Reports</span>
-                </li>
-                <li onclick="logout()" style="margin-top: auto; color: #ff4d4d;">
-                    <i class="fas fa-power-off"></i> <span>Logout</span>
-                </li>
-            </ul>
-        </nav>
+<div class="controls topbar">
+  <label>Start <input id="startDate" type="date"></label>
+  <label>End <input id="endDate" type="date"></label>
+  <button id="loadBtn" class="primary">Load</button>
 
-        <main class="glass-content">
-            
-            <section id="tab-overview" class="active-section">
-                <h2>Stock Overview</h2>
-                
-                <p id="lastActivityInfo" style="margin-bottom: 25px; padding: 10px; border-left: 5px solid var(--primary); background: rgba(0,0,0,0.3); font-size: 13px; color: var(--text-muted);"></p>
+  <div id="exportBtns">
+    <button id="excelBtn">Export Excel</button>
+    <button id="pdfBtn">Export PDF</button>
+  </div>
+</div>
 
-                <div id="stagnantBox" class="stagnant-container">
-                    <h3 style="color:white; font-size:16px; margin-bottom:10px;">
-                        <i class="fas fa-exclamation-circle"></i> Slow Moving Items (> 2 Days)
-                    </h3>
-                    <div id="stagnantItems" class="stagnant-list"></div>
-                </div>
+<div class="row">
+  <div id="reportArea" style="flex:1"></div>
 
-                <div class="overview-grid">
-                    <div>
-                        <h3 style="margin-bottom: 15px; font-size: 14px; color: #aaa;">Inventory by Category</h3>
-                        <div id="categoryGrid" class="cards-grid">
-                            <p style="color: #aaa;">Loading Data...</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 style="margin-top:30px; color:#ff4d4d; font-size: 16px;">Pending Requests</h3>
-                        <div class="table-wrapper">
-                            <table class="glass-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Item</th>
-                                        <th>Type</th>
-                                        <th>Qty</th>
-                                        <th>By</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="damageTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </section>
-
-            <section id="tab-add_item" style="display: none;">
-                <h2>Add New Item</h2>
-                <form id="addItemForm" class="internal-form">
-                    <div class="form-group">
-                        <label>Item Name *</label>
-                        <input type="text" id="itemName" placeholder="Ex: Kelzi 2025" required>
-                    </div>
-                    <div class="form-group">
-                        <label>SKU (Unique ID)</label>
-                        <input type="text" id="itemSku" placeholder="Ex: KEL-001">
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="itemCategory" class="glass-input">
-                            <option>Packing</option>
-                            <option>Insole</option>
-                            <option>Sole</option>
-                            <option>Upper</option>
-                            <option>Cut Insole</option>
-                            <option>Cut Upper</option>
-                            <option>Line Order</option>
-                        </select>
-                    </div>
-                    <button type="submit">Save to Database</button>
-                </form>
-            </section>
-
-            <section id="tab-operations" style="display: none;">
-                <h2>Stock Operations (In/Out)</h2>
-                
-                <label style="color:#00f2ff;">Select Item to Update:</label>
-                <div class="search-wrapper">
-                    <input type="text" id="opSearch" placeholder="Type item name..." autocomplete="off">
-                    <div id="opDropdown" class="dropdown-results"></div>
-                </div>
-                <input type="hidden" id="selectedItemId">
-
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <select id="opType" class="glass-input" style="flex:1;">
-                        <option value="IN">STOCK IN (+)</option>
-                        <option value="OUT">STOCK OUT (-)</option>
-                    </select>
-                    <input type="number" id="opQty" placeholder="Qty" class="glass-input" style="width:100px;">
-                </div>
-                
-                <button onclick="performStockOp()" style="margin-top:15px; background:#00f2ff; color:black;">Update Stock</button>
-            </section>
-
-            <section id="tab-inventory" style="display: none;">
-                <h2>Inventory Summary (Total Qty)</h2>
-                
-                <div class="search-wrapper" style="margin-bottom: 20px;">
-                    <input type="text" id="inventorySearchInput" placeholder="🔍 Search Item Name or Category..." autocomplete="off">
-                </div>
-
-                <div class="table-wrapper">
-                    <table class="glass-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Item Name</th>
-                                <th>Total Qty</th> <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTable">
-                            </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="tab-reports" style="display: none;">
-                <h2>Reports System</h2>
-                
-                <div class="date-filters">
-                    <label>From: <input type="date" id="dateFrom" class="glass-input" style="width:auto; display:inline-block;"></label>
-                    <label>To: <input type="date" id="dateTo" class="glass-input" style="width:auto; display:inline-block;"></label>
-                </div>
-
-                <div class="report-tabs">
-                    <button onclick="loadReport('NORMAL', event)" class="tab-btn active"><i class="fas fa-list-alt"></i> Normal</button>
-                    <button onclick="loadReport('ADVANCE', event)" class="tab-btn"><i class="fas fa-exchange-alt"></i> Advance</button>
-                    <button onclick="loadReport('ITEM', event)" class="tab-btn"><i class="fas fa-chart-line"></i> History</button>
-                </div>
-
-                <div id="itemReportSearch" style="display:none; margin-top:10px;" class="search-wrapper">
-                    <input type="text" id="repItemSearch" placeholder="Search item for history..." autocomplete="off">
-                    <div id="repDropdown" class="dropdown-results"></div>
-                </div>
-
-                <div id="chartContainer" style="height: 300px; margin-bottom: 30px; display:none;">
-                    <canvas id="reportChart"></canvas>
-                </div>
-                
-                <div id="kpiGrid" class="cards-grid" style="display:none; margin-bottom: 20px;">
-                    <div class="glass-card"><i class="fas fa-sign-in-alt"></i><h3 id="kpiIn">0</h3><p>Total Stock IN</p></div>
-                    <div class="glass-card"><i class="fas fa-sign-out-alt"></i><h3 id="kpiOut">0</h3><p>Total Stock OUT</p></div>
-                    <div class="glass-card"><i class="fas fa-balance-scale"></i><h3 id="kpiNet">0</h3><p>Net Change</p></div>
-                </div>
-
-
-                <div id="reportOutput" class="table-wrapper" style="margin-top:20px;"></div>
-            </section>
-
-        </main>
+  <div style="width:480px; min-width:320px;">
+    <div class="box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:700">Category Chart</div>
+        <small id="chartRange"></small>
+      </div>
+      <div id="chartWrap" style="margin-top:12px">
+        <canvas id="catChart" width="480" height="320"></canvas>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div id="damageModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content glass-card">
-            <span class="modal-close" onclick="hideModal()">&times;</span>
-            <h3 id="modalTitle" style="color:var(--primary); margin-bottom:15px;">Damage Report Details</h3>
-            
-            <div class="modal-info-grid">
-                <div><strong>Reported Date:</strong> <span id="modalDate"></span></div>
-                <div><strong>Reported By:</strong> <span id="modalBy"></span></div>
-                <div><strong>Quantity:</strong> <span id="modalQty" style="font-weight:bold; color:#ffb300;"></span></div>
-            </div>
-            
-            <h4 style="margin-top:20px; border-bottom: 1px solid #333; padding-bottom: 5px; color:#ff4d4d;">
-                <i class="fas fa-exclamation-triangle"></i> Reason / Note:
-            </h4>
-            <p id="modalNote" style="white-space: pre-wrap; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;"></p>
-
-            <div class="modal-actions">
-                <button id="modalReplaceBtn" class="btn-action btn-approve" style="width:100%;">Replace Stock</button>
-                <button id="modalRemoveBtn" class="btn-action btn-reject" style="width:100%; margin-top:10px;">Remove Item</button>
-            </div>
-        </div>
+<!-- Modal -->
+<div id="modal" onclick="closeModal()">
+  <div id="modalInner" onclick="event.stopPropagation()">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 id="modalTitle" style="margin:0">Transactions</h3>
+      <div>
+        <button onclick="downloadModalExcel()">Download Excel</button>
+        <button onclick="downloadModalPDF()">Download PDF</button>
+        <button onclick="closeModal()">Close</button>
+      </div>
     </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
 
-    <script src="admin_script.js"></script>
+<script>
+/* -------------------------
+   0) DATA SOURCE
+   If your backend already injects `window.transactions` (array),
+   this script will use that. Otherwise we use sample data so you can test.
+   Each transaction: {
+     id?,
+     timestamp: ISO string or date-only 'YYYY-MM-DD' or date-time,
+     category: string,
+     subcategory?: string,
+     item_name: string,
+     qty_changed: number,
+     note?: string
+   }
+-------------------------*/
+
+if (!window.transactions) {
+  // SAMPLE data for testing
+  window.transactions = [
+    { id:1, timestamp:"2025-11-03T09:12:00Z", category:"Electronics", subcategory:"Phones", item_name:"iPhone 12", qty_changed:5, note:"restock" },
+    { id:2, timestamp:"2025-11-04T10:02:35Z", category:"Electronics", subcategory:"Phones", item_name:"Samsung S21", qty_changed:3 },
+    { id:3, timestamp:"2025-11-10T14:22:00Z", category:"Electronics", subcategory:"Laptops", item_name:"Dell XPS", qty_changed:2 },
+    { id:4, timestamp:"2025-11-12T11:00:00Z", category:"Home", subcategory:"Kitchen", item_name:"Blender", qty_changed:4 },
+    { id:5, timestamp:"2025-11-20T08:30:00Z", category:"Home", subcategory:"Cleaning", item_name:"Vacuum", qty_changed:1 },
+    { id:6, timestamp:"2025-11-25T16:05:00Z", category:"Electronics", subcategory:"Phones", item_name:"iPhone 12", qty_changed:-1, note:"sale" },
+    { id:7, timestamp:"2025-11-26T12:00:00Z", category:"Sports", subcategory:"Fitness", item_name:"Treadmill", qty_changed:2 },
+    { id:8, timestamp:"2025-11-27T17:00:00Z", category:"Home", subcategory:"Kitchen", item_name:"Toaster", qty_changed:3 },
+    { id:9, timestamp:"2025-11-28T19:10:00Z", category:"Electronics", subcategory:"Accessories", item_name:"USB-C Cable", qty_changed:10 },
+    { id:10,timestamp:"2025-11-29T09:30:00Z", category:"Sports", subcategory:"Outdoor", item_name:"Tent", qty_changed:2 },
+  ];
+}
+
+const rows = window.transactions.map(r => {
+  // normalize timestamp to Date object
+  const ts = (typeof r.timestamp === 'string') ? new Date(r.timestamp) : r.timestamp;
+  return {...r, _ts: ts};
+});
+
+/* -------------------------
+   1) Utilities
+-------------------------*/
+function parseInputDate(v, end=false) {
+  if (!v) return null;
+  // v is yyyy-mm-dd
+  return end ? new Date(v + 'T23:59:59.999') : new Date(v + 'T00:00:00');
+}
+
+function formatISODate(d) {
+  return d.toISOString().split('T')[0];
+}
+
+/* -------------------------
+   2) Category Color Coding
+   We'll generate a color map for categories.
+-------------------------*/
+const colorPalette = [
+  '#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#06b6d4',
+  '#3b82f6','#6366f1','#8b5cf6','#ec4899','#f472b6','#a3e635','#60a5fa',
+];
+function buildCategoryColors(categories) {
+  const map = {};
+  let i=0;
+  categories.forEach(c => { map[c] = colorPalette[i % colorPalette.length]; i++; });
+  return map;
+}
+
+/* -------------------------
+   3) Aggregation functions
+-------------------------*/
+function filterByRange(allRows, start, end) {
+  return allRows.filter(r => {
+    if (start && r._ts < start) return false;
+    if (end && r._ts > end) return false;
+    return true;
+  });
+}
+
+function aggregateByCategory(rows) {
+  const catMap = new Map();
+  rows.forEach(r => {
+    const cat = r.category || '(Uncategorized)';
+    if (!catMap.has(cat)) catMap.set(cat, { total:0, subs: new Map() });
+    const entry = catMap.get(cat);
+    const qty = Number(r.qty_changed) || 0;
+    entry.total += qty;
+
+    const subKey = r.subcategory && r.subcategory.trim() ? r.subcategory.trim() : (r.item_name || '(unknown)');
+    if (!entry.subs.has(subKey)) entry.subs.set(subKey, { total:0, rows:[] });
+    const sub = entry.subs.get(subKey);
+    sub.total += qty;
+    sub.rows.push(r);
+  });
+
+  // convert to array
+  const arr = [];
+  for (const [cat, val] of catMap.entries()) {
+    arr.push({
+      category: cat,
+      total: val.total,
+      subcategories: Array.from(val.subs.entries()).map(([name, info]) => ({ name, total:info.total, rows: info.rows }))
+        .sort((a,b)=> b.total - a.total)
+    });
+  }
+  arr.sort((a,b)=> b.total - a.total);
+  return arr;
+}
+
+/* -------------------------
+   4) Render functions
+-------------------------*/
+let lastAggregated = null; // will hold aggregated data for exports
+let categoryColorMap = {};
+
+function renderReport(agg, start, end) {
+  lastAggregated = { agg, start, end };
+
+  const container = document.getElementById('reportArea');
+  container.innerHTML = '';
+
+  // legend
+  const legend = document.createElement('div');
+  legend.className = 'box';
+  legend.innerHTML = '<strong>Legend (Category colors)</strong><div style="margin-top:8px" id="legendInner"></div>';
+  container.appendChild(legend);
+
+  const legendInner = legend.querySelector('#legendInner');
+  legendInner.innerHTML = '';
+  Object.keys(categoryColorMap).forEach(cat => {
+    const div = document.createElement('div');
+    div.style.display = 'inline-block';
+    div.style.marginRight = '8px';
+    div.innerHTML = `<span class="color-dot" style="background:${categoryColorMap[cat]}"></span>${cat}`;
+    legendInner.appendChild(div);
+  });
+
+  // each category box
+  agg.forEach(cat => {
+    const box = document.createElement('div');
+    box.className = 'box';
+
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.style.borderLeft = `6px solid ${categoryColorMap[cat.category] || '#ddd'}`;
+
+    const left = document.createElement('div');
+    left.className = 'cat-title';
+    left.innerHTML = `<span class="color-dot" style="background:${categoryColorMap[cat.category] || '#ccc'}"></span>${cat.category}`;
+
+    const right = document.createElement('div');
+    right.style.display = 'flex'; right.style.gap='8px'; right.style.alignItems='center';
+
+    const totalBadge = document.createElement('span');
+    totalBadge.className = 'badge';
+    totalBadge.textContent = `Total: ${cat.total}`;
+
+    const expandBtn = document.createElement('button');
+    expandBtn.textContent = 'Show';
+    expandBtn.style.fontSize = '13px';
+
+    right.appendChild(totalBadge);
+    right.appendChild(expandBtn);
+
+    header.appendChild(left);
+    header.appendChild(right);
+    box.appendChild(header);
+
+    const subList = document.createElement('div');
+    subList.className = 'sub-list';
+
+    cat.subcategories.forEach(sub => {
+      const s = document.createElement('div');
+      s.className = 'sub-item';
+      s.innerHTML = `<div><strong>${sub.name}</strong></div><div>${sub.total}</div>`;
+      // click sub-item -> open modal with full rows
+      s.addEventListener('click', () => openModal(cat.category, sub));
+      subList.appendChild(s);
+    });
+
+    expandBtn.addEventListener('click', () => {
+      const showing = subList.style.display === 'block';
+      subList.style.display = showing ? 'none' : 'block';
+      expandBtn.textContent = showing ? 'Show' : 'Hide';
+    });
+
+    box.appendChild(subList);
+    container.appendChild(box);
+  });
+
+  // update chart
+  drawChart(agg, start, end);
+}
+
+/* -------------------------
+   5) Chart (Chart.js)
+-------------------------*/
+let chartInstance = null;
+function drawChart(agg, start, end) {
+  const labels = agg.map(a => a.category);
+  const data = agg.map(a => a.total);
+  const bg = labels.map(l => categoryColorMap[l] || '#888');
+
+  const ctx = document.getElementById('catChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Qty Changed',
+        data,
+        backgroundColor: bg,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display:false },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      onClick(evt, elements) {
+        if (elements.length) {
+          const idx = elements[0].index;
+          const cat = labels[idx];
+          // find aggregated for that category and toggle its sub-list scroll into view
+          const catBox = Array.from(document.querySelectorAll('.cat-title')).find(el => el.textContent.includes(cat));
+          if (catBox) catBox.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      },
+      scales: {
+        y: { beginAtZero:true }
+      }
+    }
+  });
+
+  const rangeText = document.getElementById('chartRange');
+  rangeText.textContent = start && end ? `${formatISODate(start)} → ${formatISODate(end)}` : '';
+}
+
+/* -------------------------
+   6) Modal (full transactions)
+-------------------------*/
+let modalState = { cat:null, sub:null };
+function openModal(category, sub) {
+  modalState = { category, sub };
+  document.getElementById('modalTitle').textContent = `Transactions — ${category} / ${sub.name}`;
+  const body = document.getElementById('modalBody');
+  body.innerHTML = '';
+
+  // table
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Date</th><th>Item</th><th>Subcategory</th><th>Qty</th><th>Note</th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  sub.rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const d = new Date(r.timestamp);
+    tr.innerHTML = `<td>${d.toLocaleString()}</td><td>${r.item_name}</td><td>${r.subcategory||''}</td><td>${r.qty_changed}</td><td>${r.note||''}</td>`;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  body.appendChild(table);
+
+  // show
+  document.getElementById('modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+/* download modal contents as Excel */
+function downloadModalExcel() {
+  if (!modalState.sub) return;
+  const rows = modalState.sub.rows.map(r => ({
+    Date: new Date(r.timestamp).toLocaleString(),
+    Category: modalState.category,
+    Subcategory: r.subcategory || '',
+    Item: r.item_name,
+    Qty: r.qty_changed,
+    Note: r.note || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+  XLSX.writeFile(wb, `${modalState.category}-${modalState.sub.name}-transactions.xlsx`);
+}
+
+/* download modal as PDF (screenshot) */
+async function downloadModalPDF() {
+  const inner = document.getElementById('modalInner');
+  const canvas = await html2canvas(inner, { scale: 2 });
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
+  const imgProps = pdf.getImageProperties(imgData);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  pdf.save(`${modalState.category}-${modalState.sub.name}-transactions.pdf`);
+}
+
+/* -------------------------
+   7) Exports for whole report
+-------------------------*/
+function exportExcelAll() {
+  if (!lastAggregated) return alert('Load data first');
+  // build rows: category / sub / qty
+  const rowsForExcel = [];
+  lastAggregated.agg.forEach(cat => {
+    rowsForExcel.push({ Category: cat.category, Subcategory: '(TOTAL)', Qty: cat.total });
+    cat.subcategories.forEach(sub => {
+      rowsForExcel.push({ Category: cat.category, Subcategory: sub.name, Qty: sub.total });
+    });
+  });
+  const ws = XLSX.utils.json_to_sheet(rowsForExcel);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  const start = lastAggregated.start ? formatISODate(lastAggregated.start) : 'start';
+  const end = lastAggregated.end ? formatISODate(lastAggregated.end) : 'end';
+  XLSX.writeFile(wb, `report_${start}_${end}.xlsx`);
+}
+
+async function exportPDFAll() {
+  // screenshot the report area and download as PDF
+  const node = document.getElementById('reportArea');
+  const canvas = await html2canvas(node, { scale: 2 });
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
+  const imgProps = pdf.getImageProperties(imgData);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  pdf.save(`report_view.pdf`);
+}
+
+/* -------------------------
+   8) Wire up load and defaults
+-------------------------*/
+document.getElementById('loadBtn').addEventListener('click', loadAndRender);
+document.getElementById('excelBtn').addEventListener('click', exportExcelAll);
+document.getElementById('pdfBtn').addEventListener('click', exportPDFAll);
+
+function loadAndRender() {
+  const sVal = document.getElementById('startDate').value;
+  const eVal = document.getElementById('endDate').value;
+  const start = sVal ? parseInputDate(sVal,false) : null;
+  const end = eVal ? parseInputDate(eVal,true) : null;
+
+  const filtered = filterByRange(rows, start, end);
+  const agg = aggregateByCategory(filtered);
+
+  // build color map
+  const categories = agg.map(a => a.category);
+  categoryColorMap = buildCategoryColors(categories);
+
+  renderReport(agg, start, end);
+}
+
+// defaults: last 30 days
+(function init() {
+  const end = new Date();
+  const start = new Date(); start.setDate(end.getDate()-30);
+  document.getElementById('startDate').value = formatISODate(start);
+  document.getElementById('endDate').value = formatISODate(end);
+
+  loadAndRender();
+})();
+
+/* helper for modal downloads (reuse existing arrays) */
+function downloadModalPDF() { /* defined earlier - keep */ }
+function downloadModalExcel() { /* defined earlier - keep */ }
+
+</script>
 </body>
 </html>
