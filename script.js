@@ -1,12 +1,12 @@
 // --- CONFIGURATION ---
-const API_URL = "https://backpcu-production.up.railway.app"; 
+// මෙන්න මෙතන තමයි ඔයාගේ නියම Railway Link එක තියෙන්න ඕනේ (Screenshot එකට අනුව)
+const API_URL = "https://finalbackendpcu-production.up.railway.app"; 
 
 // --- LOGIN EVENT LISTENER ---
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
 
     // 1. Input ලබා ගැනීම සහ සුද්ද කිරීම (Mobile Space Fix)
-    // .trim() මගින් නමේ අගට හෝ මුලට වැරදීමකින් වැදුණු Space ඉවත් කරයි.
     const usernameIn = document.getElementById('username').value.trim();
     const passwordIn = document.getElementById('password').value.trim();
     
@@ -14,7 +14,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const errorMsg = document.getElementById('errorMsg');
     const loginBtn = document.getElementById('loginBtn');
 
-    // Validation (හිස් නම් යවන්න එපා)
+    // Validation
     if (!usernameIn || !passwordIn) {
         errorMsg.innerText = "Please enter Username & Password";
         return;
@@ -32,7 +32,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            // Cookie සහ Security දත්ත හුවමාරු කිරීමට මෙය වැදගත්
             credentials: 'include', 
             body: JSON.stringify({ 
                 username: usernameIn, 
@@ -40,7 +39,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             })
         });
 
-        // Response එක JSON ද බලන්න (Server Error වලදී HTML එන්න පුළුවන් නිසා)
+        // Response එක JSON ද බලන්න
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
             throw new Error("Server Error (Not JSON)");
