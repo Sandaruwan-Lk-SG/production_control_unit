@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const API_URL = "https://backpcu-production.up.railway.app"; 
+const API_URL = "https://finalbackendpcu-production.up.railway.app"; 
 
 // --- GLOBAL DATA STORE ---
 let globalInventory = [];
