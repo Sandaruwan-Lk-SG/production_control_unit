@@ -1,0 +1,25 @@
+{
+  "background_color": "#c1efbb",
+  "dir": "auto",
+  "display": "fullscreen",
+  "name": "DSI PCU",
+  "orientation": "any",
+  "scope": "https://sandaruwan-lk-sg.github.io",
+  "short_name": "PCU",
+  "start_url": "https://sandaruwan-lk-sg.github.io/pcu/index.html",
+  "theme_color": "#ffffff",
+  "id": "production",
+  "description": "PCU Inventory App is a mobile-optimized Progressive Web App built to streamline production control and inventory management. It loads quickly, works offline, and can be installed directly on any Android device without the need for Google Play.\n\nWith a clean interface and fast performance, PCU Inventory App gives users access to production data and tools from anywhere. The app provides offline fallback screens, local data caching, and a native-like experience with its standalone display mode.\n\nKey Features\n\n🚀 Fast loading with optimized caching\n\n📶 Works offline with service worker support\n\n📱 Installable on Android home screen like a real app\n\n🧭 Standalone mode (no browser UI)\n\n🔐 Local data storage for quick access\n\n🌐 Lightweight and does not require Play Store installation\n\n🎨 Mobile-friendly UI designed for daily production use\n\n\nWhy Use This App?\nPCU Inventory App helps teams quickly access inventory and production pages, even in weak or unstable network conditions. It reduces loading time, improves reliability, and ensures essential information remains available when needed.",
+  "lang": "en",
+  "display_override": [
+    "fullscreen",
+    "minimal-ui",
+    "standalone",
+    "window-controls-overlay"
+  ],
+  "prefer_related_applications": true,
+  "categories": [
+    "business",
+    "finance"
+  ]
+}
